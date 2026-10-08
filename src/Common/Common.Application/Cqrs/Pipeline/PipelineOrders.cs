@@ -27,12 +27,7 @@ internal static class PipelineOrders
     public const int Caching = 600;
 
     /// <summary>
-    /// Post-commit outbox publish (outside the transaction; after <see cref="Transaction"/> returns).
+    /// Per-partition rate limiting (after authorization; before idempotency/caching).
     /// </summary>
-    public const int OutboxPublish = 650;
-
-    /// <summary>
-    /// Command transaction / UoW (innermost before handler).
-    /// </summary>
-    public const int Transaction = 700;
+    public const int RateLimit = 550;
 }

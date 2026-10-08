@@ -10,15 +10,14 @@ using Common.Application.Cqrs.Behaviors.Caching;
 using Common.Application.Cqrs.Behaviors.Idempotency;
 using Common.Application.Cqrs.Behaviors.Logging;
 using Common.Application.Cqrs.Behaviors.Metrics;
-using Common.Application.Cqrs.Behaviors.Outbox;
 using Common.Application.Cqrs.Behaviors.Performance;
-using Common.Application.Cqrs.Behaviors.Transaction;
+using Common.Application.Cqrs.Behaviors.RateLimit;
 using Common.Application.Cqrs.Behaviors.Validation;
 using Common.Application.Cqrs.Defaults;
 using Common.Application.Cqrs.Pipeline;
 using Common.Application.Idempotency;
 using Common.Application.Outbox;
-using Common.Application.Persistence;
+using Common.Application.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -51,6 +50,10 @@ public static class DependencyInjection
             .ValidateOnStart();
         services.AddSingleton<IValidateOptions<CachingBehaviorOptions>, CachingBehaviorOptionsValidator>();
 
+        services.AddOptions<RateLimitBehaviorOptions>()
+            .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<RateLimitBehaviorOptions>, RateLimitBehaviorOptionsValidator>();
+
         services.AddOptions<OutboxOptions>()
             .ValidateOnStart();
         services.AddSingleton<IValidateOptions<OutboxOptions>, OutboxOptionsValidator>();
@@ -61,8 +64,7 @@ public static class DependencyInjection
         services.TryAddSingleton<IAuthorizationService, AllowAllAuthorizationService>();
         services.TryAddSingleton<ICurrentUserAccessor, NullCurrentUserAccessor>();
         // IRequestCache / IIdempotencyStore: Redis via Common.Infrastructure.AddCommonInfrastructure.
-        // IUnitOfWork: EF via CoreQuant.Infrastructure.Persistence.EF.AddCoreQuantPersistenceEf (NullUnitOfWork until then).
-        services.TryAddScoped<IUnitOfWork, NullUnitOfWork>();
+        services.TryAddSingleton<IRateLimiter, InMemoryRateLimiter>();
         services.TryAddSingleton<IOutboxWriter, NullOutboxWriter>();
         services.TryAddSingleton<IOutboxPublisher, NullOutboxPublisher>();
         services.TryAddScoped<IOutboxPendingBuffer, OutboxPendingBuffer>();
@@ -76,10 +78,9 @@ public static class DependencyInjection
         services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IPipelineBehavior<,>), typeof(PerformanceBehavior<,>)));
         services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>)));
         services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IPipelineBehavior<,>), typeof(AuthorizationBehavior<,>)));
+        services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IPipelineBehavior<,>), typeof(RateLimitBehavior<,>)));
         services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IPipelineBehavior<,>), typeof(IdempotencyBehavior<,>)));
         services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>)));
-        services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IPipelineBehavior<,>), typeof(OutboxPublishBehavior<,>)));
-        services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IPipelineBehavior<,>), typeof(TransactionBehavior<,>)));
 
         if (assemblies is { Length: > 0 })
         {
