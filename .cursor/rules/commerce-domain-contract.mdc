@@ -1,0 +1,287 @@
+---
+description: Commerce Domain layer contract — DDD rules, forbidden dependencies, encapsulation, guards, events, repositories, organization, docs, target map, and wait-for-user protocol.
+alwaysApply: true
+---
+
+# Commerce Domain Contract
+
+This session designs and implements the Domain layer of a production-grade e-commerce backend (Stora).
+
+Full target map: `docs/Domain.md`. Read that file before designing or implementing any bounded context.
+
+## Session protocol
+
+- Keep this overview in mind. Do not start implementation, scaffolding, or phasing until the user explicitly asks.
+- When the user gives a task, do only that task. Do not jump ahead.
+- Preserve existing naming: `Stora.Domain`, `Common.Domain` (`Entity<TId>`, `AggregateRoot<TId>`, `ValueObject`, `IDomainEvent`, `DomainEvent`).
+- Preserve existing type and file names (`Product.cs`, `ProductCreated`, `Ensure`). Do not rename to `Products.cs`, `ProductCreatedEvent`, or `Guard.Against`. Namespace and folder segments for subdomains and aggregates are **plural**; the type stays singular (`Stora.Domain.Aggregates.Catalogs.Products` + `class Product`).
+- Never silently remove or merge an existing domain concept. Propose first.
+- Do not reorganize an existing Aggregate, Subdomain, Entity, Value Object, Repository contract, Domain Event, or other domain concept unless explicitly requested or required by the current task.
+
+## Architecture
+
+Follow DDD, Clean Architecture, SOLID, rich domain model, explicit aggregate boundaries, encapsulation, domain events, value objects, invariants, ubiquitous language, persistence ignorance.
+
+Domain contains business behavior and rules — not persistence or infrastructure.
+
+## Domain MUST NOT depend on
+
+EF Core, ASP.NET Core, HTTP, controllers, Application layer, Infrastructure layer, database providers, Redis, message brokers, external APIs, file systems, logging frameworks.
+
+`System.ComponentModel.Description` on enums is allowed BCL metadata. It is not infrastructure.
+
+## Model rules
+
+1. Aggregate roots control their internal entities.
+2. External aggregates are referenced by ID, not navigation objects.
+3. Invariants are enforced inside the domain model.
+4. Value objects are immutable.
+5. Entities have identity.
+6. Aggregate roots expose controlled behavior, not public mutable collections.
+7. Collections are not publicly mutable.
+8. Domain events represent meaningful business events.
+9. Do not create entities merely because a database table exists.
+10. Do not wrap every primitive in a value object unless it is a meaningful domain concept. Do not invent `ProductName` / `FirstName` VOs.
+11. Do not introduce unnecessary abstractions.
+12. Do not add infrastructure concerns to Domain.
+13. Do not add speculative features unless explicitly required.
+14. Prefer explicit domain behavior over anemic models.
+15. Preserve existing naming and architecture unless there is a strong DDD reason to change them.
+16. Never silently remove an existing domain concept.
+17. Aggregate boundaries follow transactional consistency and invariants, not database relationships.
+18. Cross-aggregate consistency uses domain/application events, not object graphs.
+19. State owned by an Aggregate must be controlled through the Aggregate Root.
+20. Aggregate internals must not expose publicly mutable state.
+21. Creation and modification of domain state must be protected by explicit domain guards (`Ensure` in `Common.Domain`).
+22. Meaningful business state changes on an Aggregate Root or its internal Entities must raise Domain Events through the Aggregate Root (`RaiseDomainEvent`). Child entities do not own a separate event list.
+
+Build commerce aggregates in `src/Domain/Stora.Domain` on top of `Common.Domain`.
+
+---
+
+# Encapsulation
+
+The Aggregate Root is the only gateway for changing aggregate state.
+
+- External callers must not create, edit, or delete internal Entities except through the root.
+- Internal Entities must not expose public setters for business state. Use `private` setters, `internal` constructors, factories, and root methods.
+- Do not expose internal collections as publicly mutable (`IReadOnlyList<T>` / `DomainCollection<T>`).
+- Do not expose internal state merely for Application, API, or Persistence convenience.
+
+Correct: External layer → Aggregate Root → Entity / VO / rules.
+
+Incorrect: External layer → Entity, VO, or internal collection.
+
+---
+
+# EF Core materialization (private parameterless constructor)
+
+Every `Entity<TId>` and `AggregateRoot<TId>` in `Stora.Domain` MUST declare a **private parameterless constructor** used only by EF Core to rehydrate rows. Domain and application code MUST NOT call it.
+
+```csharp
+public sealed class Product : AggregateRoot<ProductId>
+{
+    private Product() { }
+
+    private Product(string name, Slug slug, /* … */) { /* business creation */ }
+}
+```
+
+- Keep business creation on factories, static `Create` methods, or parameterized constructors.
+- Never expose this constructor as `public` or `internal`.
+- Never invoke it from Domain, Application, Infrastructure, or tests — only EF materialization.
+- Value objects do not get this constructor; they are mapped as owned columns or conversions.
+
+---
+
+# Row audit actors (CreatedBy / ModifiedBy / DeletedBy)
+
+Every `Entity<TId>` and `AggregateRoot<TId>` inherits persistence audit actor columns from `Common.Domain.Entity`:
+
+| Property | Meaning |
+| --- | --- |
+| `CreatedBy` | User id (`long?`) who created the row. Maps to `CreatedBy BIGINT UNSIGNED NULL`. |
+| `ModifiedBy` | User id who last changed the row. Maps to `ModifiedBy`. |
+| `DeletedBy` | User id who soft-deleted the row. Maps to `DeletedBy`. |
+
+Rules:
+
+- Type is `long?` — snowflake `UserId` value from the Identity context. `null` = unknown actor or system operation.
+- Do **not** duplicate these names on entity types for other meanings. Use domain-specific names instead (e.g. `Refund.RequestedBy`, not `Refund.CreatedBy`).
+- Factories MAY call `StampCreated(userId)` when the acting user is known at creation time.
+- `Touch(modifiedBy)` and `MarkAsRemoved(deletedBy)` accept an optional actor id; omit when the domain operation has no user context (infrastructure may still stamp on save).
+- Do not add EF, HTTP, or infrastructure types to Domain. Actor ids are passed in as `long?` from Application at the boundary.
+- `AuditInfo` VO remains for business-level actor metadata when timestamps and actors are part of the ubiquitous language beyond row audit.
+
+---
+
+# Domain guards
+
+Use existing `Ensure` (and `DomainException` / `NotFoundException`). Do not add a second guard library.
+
+Guards run inside Domain. They protect invariants, not API input. Application/API validation must never replace them.
+
+- Do not allow invalid objects to be created.
+- Do not allow an object to enter an invalid state, even briefly.
+- Do not bypass guards with public setters.
+- Value Objects validate on creation. Entities validate on their own state changes. Aggregate Roots enforce aggregate-level invariants.
+
+```csharp
+public static Product Create(string name, Slug slug)
+{
+    var product = new Product(name, slug, /* … */);
+    product.RaiseDomainEvent(new ProductCreated(product.Id, product.Name, product.Slug, product.Type));
+    return product;
+}
+
+public void Activate()
+{
+    Ensure.That(_variants.Count > 0, "An active product must have at least one variant.", "product_not_ready");
+    Status = CatalogStatus.Active;
+    Touch();
+    RaiseDomainEvent(new ProductActivated(Id));
+}
+```
+
+---
+
+# Domain events
+
+Raise via `AggregateRoot.RaiseDomainEvent`. `DomainEvent` already supplies `EventId`, `OccurredOnUtc`, `SchemaVersion`. Do not duplicate `OccurredAt` on each record.
+
+An event must make **what happened**, **which record**, and **relevant change data** obvious. **When** is `OccurredOnUtc`.
+
+Past-tense names, no `Event` suffix: `ProductCreated`, `ProductActivated`, `CustomerAddressAdded`. Files match (`ProductCreated.cs`). Incorrect: `CreateProduct`, `ProductCreatedEvent`.
+
+Do not emit vague events for new behavior (`SomethingChanged`, `EntityUpdated`, `DataModified`). Prefer specific past-tense events that state what changed.
+
+Do not emit events for purely technical mutations (`Touch`, `Version`).
+
+Each event is one `.cs` file under the owning aggregate: `Stora.Domain.Aggregates.Catalogs.Products.Events`.
+
+---
+
+# Repository contracts
+
+Every Aggregate Root must have **exactly one** dedicated repository interface in that aggregate's `Repositories` folder.
+
+```text
+Aggregates/Catalogs/Products/Repositories/IProductRepository.cs
+namespace Stora.Domain.Aggregates.Catalogs.Products.Repositories;
+```
+
+- CRUD and load/store are around the Aggregate Root, not tables or child entities.
+- Persistence-ignorant: no `DbSet`, `IQueryable`, `DbContext`, SQL, or ORM types.
+- Implementations live in Infrastructure, never in Domain.
+- Do not add a generic `IRepository<T>`. Do not add a second repository for the same aggregate unless explicitly approved.
+- One `I{Aggregate}Repository` per aggregate root already exists under that aggregate's `Repositories` folder. Extra methods are unique business-key loads only.
+
+---
+
+# Organization
+
+**Namespaces are plural. Domain types are singular.** Folder names match the namespace. The `.cs` file and the type stay singular.
+
+```csharp
+namespace Stora.Domain.Aggregates.Catalogs.Products;
+
+public sealed class Product : AggregateRoot<ProductId>
+```
+
+| | Namespace / folder | Type / file |
+| --- | --- | --- |
+| Correct | `Catalogs.Products` | `Product` / `Product.cs` |
+| Incorrect | `Catalog.Product` | `Products` / `Products.cs` |
+
+Same split for every layer under an aggregate: `Catalogs.Products.Events` holds `ProductCreated`, not `ProductsCreated` or `ProductCreatedEvent`.
+
+```text
+src/Domain/Stora.Domain/Aggregates/{Subdomains}/{Aggregates}/
+  {AggregateRoot}.cs          // Product.cs, not Products.cs
+  Entities/
+  Enums/
+  VO/
+  Events/
+  Repositories/               // only when the interface exists
+```
+
+Namespaces match folders:
+
+```text
+Stora.Domain.Aggregates.{Subdomains}.{Aggregates}
+Stora.Domain.Aggregates.{Subdomains}.{Aggregates}.Entities
+Stora.Domain.Aggregates.{Subdomains}.{Aggregates}.Enums
+Stora.Domain.Aggregates.{Subdomains}.{Aggregates}.VO
+Stora.Domain.Aggregates.{Subdomains}.{Aggregates}.Events
+Stora.Domain.Aggregates.{Subdomains}.{Aggregates}.Repositories
+```
+
+Subdomain namespace map (plural; uncountable labels stay as the ubiquitous-language word):
+
+| Subdomain namespace | Aggregates (plural folder → singular type) |
+| --- | --- |
+| `Catalogs` | `Products` → `Product`, `Categories` → `Category`, `CatalogAttributes` → `CatalogAttribute`, `Brands` → `Brand`, `ProductTags` → `ProductTag`, `ProductCollections` → `ProductCollection`, `ProductReviews` → `ProductReview` |
+| `Pricing` | `PriceLists` → `PriceList`, `Coupons` → `Coupon`, `Promotions` → `Promotion` |
+| `Inventories` | `InventoryItems` → `InventoryItem`, `Warehouses` → `Warehouse` |
+| `Customers` | `Customers` → `Customer`, `CustomerGroups` → `CustomerGroup`, `Wishlists` → `Wishlist` |
+| `Carts` | `Carts` → `Cart` |
+| `Checkouts` | `Checkouts` → `Checkout` |
+| `Orders` | `Orders` → `Order` |
+| `Payments` | `Payments` → `Payment`, `PaymentMethods` → `PaymentMethod` |
+| `Shipping` | `Shipments` → `Shipment`, `ShippingMethods` → `ShippingMethod`, `ShippingClasses` → `ShippingClass`, `ShippingZones` → `ShippingZone` |
+| `Taxes` | `TaxClasses` → `TaxClass` |
+| `Content` | `Posts` → `Post`, `PostCategories` → `PostCategory`, `PostComments` → `PostComment`, `Pages` → `Page` |
+| `Media` | `Media` → `Media`, `MediaFolders` → `MediaFolder` |
+| `Messaging` | `Outboxes` → `Outbox`, `Inboxes` → `Inbox` |
+| `Identity` | `Users` → `User`, `Roles` → `Role` |
+| `Admins` | `AuditLogs` → `AuditLog` |
+| `Settings` | `StoreSettings` → `StoreSettings` |
+| `Notifications` | `Notifications` → `Notification`, `NotificationTemplates` → `NotificationTemplate`, `NotificationPreferences` → `NotificationPreference` |
+| `Integrations` | `Webhooks` → `Webhook` |
+
+Existing folders and namespaces follow this map.
+
+Add a subdomain only for a real business capability. Do not create empty `Entities` / `Enums` / `VO` / `Events` / `Repositories` folders.
+
+Shared types (`Money`, `Sku`, `Address`, `Email`, `Quantity`, …) stay in `Stora.Domain.SharedKernel`. Do not move aggregate-owned types into SharedKernel. `SharedKernel` is a technical folder name, not a pluralized aggregate.
+
+**One C# type per `.cs` file.** No `Enums.cs`, `Events.cs`, or similar dumps.
+
+---
+
+# Enums
+
+Every enum member has `[Description("…")]` in **Persian**. Member names stay English.
+
+```csharp
+public enum CatalogStatus
+{
+    [Description("پیش‌نویس")]
+    Draft = 0,
+    [Description("فعال")]
+    Active = 1,
+}
+```
+
+---
+
+# Documentation
+
+English XML docs on Domain types, properties, and methods. Explain business responsibility, not “this is a class.” Identifiers stay English. Persian is only for enum `Description` values.
+
+Existing files may lack per-property comments; add them when touching that type, not as a drive-by rewrite of the whole layer.
+
+---
+
+# New aggregate checklist
+
+1. Business responsibility and owning subdomain
+2. Boundary, root, entities, VOs, enums
+3. Creation/modification invariants and `Ensure` guards
+4. Domain behavior on the root
+5. Meaningful past-tense events raised on the root
+6. One type per file; namespaces matching folders (plural namespace segments, singular types)
+7. English docs; Persian enum descriptions
+8. Repository interface only when asked
+
+Do not invent aggregates to fill folders. Do not introduce business behavior during a structural refactor. After any Domain refactor, the solution must build.

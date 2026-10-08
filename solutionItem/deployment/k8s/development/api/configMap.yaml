@@ -1,0 +1,107 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-api-properties
+  namespace: service
+data:
+  # =========================
+  # Host
+  # =========================
+  ASPNETCORE_ENVIRONMENT: "Development"
+  ApplicationName: "CoreQuant.Api"
+  AllowedHosts: "*"
+
+  # =========================
+  # Serilog
+  # =========================
+  Framework__Serilog__MinimumLevel__Default: "Debug"
+  Framework__Serilog__MinimumLevel__Override__Microsoft_AspNetCore: "Information"
+  Framework__Serilog__MinimumLevel__Override__Microsoft.AspNetCore: "Information"
+  Framework__Serilog__MinimumLevel__Override__Microsoft_EntityFrameworkCore: "Information"
+  Framework__Serilog__MinimumLevel__Override__Microsoft.EntityFrameworkCore: "Information"
+  Framework__Serilog__MinimumLevel__Override__System: "Warning"
+  Framework__Serilog__Console__Enabled: "true"
+
+  # =========================
+  # Syslog
+  # =========================
+  Framework__Syslog__Enabled: "false"
+  Framework__Syslog__Address: ""
+  Framework__Syslog__Port: "0"
+  Framework__Syslog__Format: "RFC5424"
+  Framework__Syslog__RestrictedToMinimumLevel: "Information"
+
+  # =========================
+  # Health
+  # =========================
+  Framework__Health__LivenessPath: "/health/live"
+  Framework__Health__ReadinessPath: "/health/ready"
+
+  # =========================
+  # Metrics
+  # =========================
+  Framework__Metrics__Enabled: "true"
+  Framework__Metrics__Path: "/metrics"
+
+  # =========================
+  # Resilience
+  # =========================
+  Framework__Resilience__Retry__UseJitter: "true"
+  Framework__Resilience__Retry__Delay: "00:00:02"
+  Framework__Resilience__Retry__MaxRetryAttempts: "3"
+  Framework__Resilience__Timeout: "00:00:15"
+  Framework__Resilience__CircuitBreaker__FailureThreshold: "3"
+  Framework__Resilience__CircuitBreaker__BreakDuration: "00:01:00"
+
+  # =========================
+  # Encryption (non-secret)
+  # =========================
+  Framework__Encryption__RSA__PublicKey: ""
+
+  # =========================
+  # Databases (Write)
+  # =========================
+  Infrastructure__Databases__Write__Host: "127.0.0.1"
+  Infrastructure__Databases__Write__Port: "3306"
+  Infrastructure__Databases__Write__Name: "core_quant_dev"
+  Infrastructure__Databases__Write__CommandTimeout: "00:00:30"
+
+  # =========================
+  # Databases (Read)
+  # =========================
+  Infrastructure__Databases__Read__Host: "127.0.0.1"
+  Infrastructure__Databases__Read__Port: "3306"
+  Infrastructure__Databases__Read__Name: "core_quant_dev"
+
+  # =========================
+  # Redis
+  # =========================
+  Infrastructure__Redis__Host: "127.0.0.1"
+  Infrastructure__Redis__Port: "6379"
+  Infrastructure__Redis__KeyPrefix: "framework"
+  Infrastructure__Redis__AbortOnConnectFail: "false"
+  Infrastructure__Redis__Connection__AsyncTimeout: "00:00:15"
+  Infrastructure__Redis__Connection__ConnectTimeout: "00:00:05"
+  Infrastructure__Redis__Connection__SyncTimeout: "00:01:00"
+  Infrastructure__Redis__Connection__ConnectRetry: "3"
+  Infrastructure__Redis__Connection__KeepAlive: "00:01:00"
+
+  # =========================
+  # Persistence / SlowQuery
+  # =========================
+  Infrastructure__Persistence__SlowQuery__WarningThreshold: "00:00:00.250"
+  Infrastructure__Persistence__SlowQuery__ErrorThreshold: "00:00:00.500"
+  Infrastructure__Persistence__SlowQuery__CriticalThreshold: "00:00:01"
+
+  # =========================
+  # ACL
+  # =========================
+  Infrastructure__Acl__DevAuthEnabled: "true"
+
+  # =========================
+  # Outbox
+  # =========================
+  Application__Outbox__Transport: "Logging"
+  Application__Outbox__RetryBatchSize: "50"
+  Application__Outbox__RetryLeaseSeconds: "30"
+  Application__Outbox__SchedulerIntervalSeconds: "15"

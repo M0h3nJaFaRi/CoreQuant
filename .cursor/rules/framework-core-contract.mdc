@@ -1,0 +1,65 @@
+---
+description: Framework core assembly contract — technology-independent primitives, forbidden dependencies, clocks, Result/exception rules, visibility, and ownership.
+globs: src/Framework/Framework/**/*
+alwaysApply: false
+---
+
+# Framework Core Contract
+
+This session designs and implements the core `Framework` assembly (`src/Framework/Framework`).
+
+Full rules: `docs/Framework.md`. Read that file before adding a type to this assembly.
+
+This contract applies **only** to core `Framework`. Do not use it as a dumping ground for `Framework.Infrastructure`, `Framework.Serialization`, `Framework.Security`, `Framework.Validation`, `Framework.Resilience`, `Framework.Observability`, `Framework.Messaging`, or `Framework.Web`.
+
+## Session protocol
+
+- Do not start implementation or invent types until the user explicitly asks.
+- When the user gives a task, do only that task.
+- Preserve existing naming: `Framework.Time.ISystemClock`. Implementation stays in `Framework.Infrastructure.Time.SystemClock`.
+- Do not add `IClock`, `IDateTimeProvider`, or a second clock abstraction in Common/Application.
+- Do not invent `Result`, `Error`, `IIdGenerator`, or Framework exceptions to populate folders.
+- Never silently move Domain exceptions or sibling Framework types into this assembly. Propose first.
+- Do not create empty `Abstractions` / `Results` / `Errors` / `Exceptions` folders.
+
+## Responsibility
+
+`Framework` is the lowest-level, technology-independent surface. It provides reusable mechanisms, not business behavior.
+
+It must not contain business logic or application-specific infrastructure.
+
+## MUST NOT depend on
+
+`Common.*`, `Stora.*`, other `Framework.*` assemblies, EF Core, ASP.NET Core, Redis, brokers, Keycloak, Serilog, OpenTelemetry, FluentValidation, Polly.
+
+Keep `Framework.csproj` free of package and project references unless a justified BCL-only need is documented in the same change.
+
+Other Framework assemblies may depend on `Framework`. Domain must not depend on `Framework`.
+
+## MUST NOT contain
+
+Domain entities/aggregates/events, application commands/queries/handlers, business validators, repositories, DbContext, Redis/broker/identity clients, ASP.NET middleware/controllers, logging/OTel/Polly implementations, HTTP/API models.
+
+## Allowed (only when requested and justified)
+
+Generic abstractions, primitives, Result/Error types, technical Framework exceptions, generic extensions/constants.
+
+Existing public API: `ISystemClock`. Treat every new public type as a stable contract. Default implementations to `internal`. One type per file. Namespace = `Framework.{Folder}`.
+
+## Clocks
+
+| Contract | Owner |
+| --- | --- |
+| `ISystemClock` | `Framework` (implementation: `Framework.Infrastructure.Time.SystemClock`) |
+
+There is a single clock abstraction for the whole solution. Application and Infrastructure inject `ISystemClock`. Do not introduce `IClock` or adapters that wrap the same concept.
+
+## Result and exceptions (if added later)
+
+Result types stay generic: no HTTP status codes, no API models, no `Result.NotFound("Order...")`.
+
+Framework exceptions are technical only. `OrderNotFoundException` and similar belong to Domain (`DomainException`).
+
+## Admission test
+
+Before adding a type, all must be yes: generic, reusable, technology-independent, free of business concepts, and naturally owned by **core** `Framework`.

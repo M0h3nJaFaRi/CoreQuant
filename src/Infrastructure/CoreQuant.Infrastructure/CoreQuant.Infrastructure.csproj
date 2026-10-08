@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Application\CoreQuant.Application\CoreQuant.Application.csproj" />
+    <ProjectReference Include="..\..\Domain\CoreQuant.Domain\CoreQuant.Domain.csproj" />
+    <ProjectReference Include="..\..\Common\Common.Framework\Common.Framework.csproj" />
+    <ProjectReference Include="..\..\Common\Infrastructure\Common.Infrastructure\Common.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

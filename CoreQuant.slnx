@@ -1,0 +1,188 @@
+<Solution>
+  <Folder Name="/solutionitem/" />
+  <Folder Name="/solutionitem/deployment/" />
+  <Folder Name="/solutionitem/deployment/api/" />
+  <Folder Name="/solutionitem/deployment/api/development/">
+    <File Path="solutionItem/deployment/docker/development/api/Dockerfile" />
+    <File Path="solutionItem/deployment/k8s/development/api/configMap.yaml" />
+    <File Path="solutionItem/deployment/k8s/development/api/secrets.yaml" />
+    <File Path="solutionItem/deployment/packages/development/api/nuget.config" />
+  </Folder>
+  <Folder Name="/solutionitem/deployment/api/production/">
+    <File Path="solutionItem/deployment/docker/production/api/Dockerfile" />
+    <File Path="solutionItem/deployment/k8s/production/api/configMap.yaml" />
+    <File Path="solutionItem/deployment/k8s/production/api/secrets.yaml" />
+    <File Path="solutionItem/deployment/packages/production/api/nuget.config" />
+  </Folder>
+  <Folder Name="/solutionitem/deployment/api/stage/">
+    <File Path="solutionItem/deployment/docker/stage/api/Dockerfile" />
+    <File Path="solutionItem/deployment/k8s/stage/api/configMap.yaml" />
+    <File Path="solutionItem/deployment/k8s/stage/api/Secrets.yaml" />
+    <File Path="solutionItem/deployment/packages/stage/api/nuget.config" />
+  </Folder>
+  <Folder Name="/solutionitem/deployment/consumer/" />
+  <Folder Name="/solutionitem/deployment/consumer/development/">
+    <File Path="solutionItem/deployment/docker/development/consumer/Dockerfile" />
+    <File Path="solutionItem/deployment/k8s/development/consumer/configMap.yaml" />
+    <File Path="solutionItem/deployment/k8s/development/consumer/secrets.yaml" />
+    <File Path="solutionItem/deployment/packages/development/consumer/nuget.config" />
+  </Folder>
+  <Folder Name="/solutionitem/deployment/consumer/production/">
+    <File Path="solutionItem/deployment/docker/production/consumer/Dockerfile" />
+    <File Path="solutionItem/deployment/k8s/production/consumer/configMap.yaml" />
+    <File Path="solutionItem/deployment/k8s/production/consumer/secrets.yaml" />
+    <File Path="solutionItem/deployment/packages/production/consumer/nuget.config" />
+  </Folder>
+  <Folder Name="/solutionitem/deployment/consumer/stage/">
+    <File Path="solutionItem/deployment/docker/stage/consumer/Dockerfile" />
+    <File Path="solutionItem/deployment/k8s/stage/consumer/configMap.yaml" />
+    <File Path="solutionItem/deployment/k8s/stage/consumer/secrets.yaml" />
+    <File Path="solutionItem/deployment/packages/stage/consumer/nuget.config" />
+  </Folder>
+  <Folder Name="/solutionitem/deployment/scheduler/" />
+  <Folder Name="/solutionitem/deployment/scheduler/development/">
+    <File Path="solutionItem/deployment/docker/development/scheduler/Dockerfile" />
+    <File Path="solutionItem/deployment/k8s/development/scheduler/configMap.yaml" />
+    <File Path="solutionItem/deployment/k8s/development/scheduler/secrets.yaml" />
+    <File Path="solutionItem/deployment/packages/development/scheduler/nuget.config" />
+  </Folder>
+  <Folder Name="/solutionitem/deployment/scheduler/production/">
+    <File Path="solutionItem/deployment/docker/production/scheduler/Dockerfile" />
+    <File Path="solutionItem/deployment/k8s/production/scheduler/configMap.yaml" />
+    <File Path="solutionItem/deployment/k8s/production/scheduler/secrets.yaml" />
+    <File Path="solutionItem/deployment/packages/production/scheduler/nuget.config" />
+  </Folder>
+  <Folder Name="/solutionitem/deployment/scheduler/stage/">
+    <File Path="solutionItem/deployment/docker/stage/scheduler/Dockerfile" />
+    <File Path="solutionItem/deployment/k8s/stage/scheduler/configMap.yaml" />
+    <File Path="solutionItem/deployment/k8s/stage/scheduler/secrets.yaml" />
+    <File Path="solutionItem/deployment/packages/stage/scheduler/nuget.config" />
+  </Folder>
+  <Folder Name="/solutionitem/deployment/worker/" />
+  <Folder Name="/solutionitem/deployment/worker/development/">
+    <File Path="solutionItem/deployment/docker/development/worker/Dockerfile" />
+    <File Path="solutionItem/deployment/k8s/development/worker/configMap.yaml" />
+    <File Path="solutionItem/deployment/k8s/development/worker/secrets.yaml" />
+    <File Path="solutionItem/deployment/packages/development/worker/nuget.config" />
+  </Folder>
+  <Folder Name="/solutionitem/deployment/worker/production/">
+    <File Path="solutionItem/deployment/docker/production/worker/Dockerfile" />
+    <File Path="solutionItem/deployment/k8s/production/worker/configMap.yaml" />
+    <File Path="solutionItem/deployment/k8s/production/worker/secrets.yaml" />
+    <File Path="solutionItem/deployment/packages/production/worker/nuget.config" />
+  </Folder>
+  <Folder Name="/solutionitem/deployment/worker/stage/">
+    <File Path="solutionItem/deployment/docker/stage/worker/Dockerfile" />
+    <File Path="solutionItem/deployment/k8s/stage/worker/configMap.yaml" />
+    <File Path="solutionItem/deployment/k8s/stage/worker/secrets.yaml" />
+    <File Path="solutionItem/deployment/packages/stage/worker/nuget.config" />
+  </Folder>
+  <Folder Name="/solutionitem/docs/" />
+  <Folder Name="/solutionitem/docs/api/">
+    <File Path="solutionItem/docs/api/README.md" />
+  </Folder>
+  <Folder Name="/solutionitem/docs/consumer/">
+    <File Path="solutionItem/docs/consumer/README.md" />
+  </Folder>
+  <Folder Name="/solutionitem/docs/scheduler/">
+    <File Path="solutionItem/docs/scheduler/README.md" />
+  </Folder>
+  <Folder Name="/solutionitem/docs/worker/">
+    <File Path="solutionItem/docs/worker/README.md" />
+  </Folder>
+  <Folder Name="/solutionitem/monitoring/" />
+  <Folder Name="/solutionitem/monitoring/api/" />
+  <Folder Name="/solutionitem/monitoring/consumer/" />
+  <Folder Name="/solutionitem/monitoring/scheduler/" />
+  <Folder Name="/solutionitem/monitoring/worker/" />
+  <Folder Name="/solutionitem/postman/">
+    <File Path="solutionItem/postman/CoreQuant-Local.postman_environment.json" />
+    <File Path="solutionItem/postman/CoreQuant.postman_collection.json" />
+  </Folder>
+  <Folder Name="/solutionitem/scripts/" />
+  <Folder Name="/solutionitem/scripts/MySql/" />
+  <Folder Name="/solutionitem/scripts/MySql/Migrations/">
+    <File Path="solutionItem/scripts/MySql/Migrations/001-Init-Migration-.sql" />
+  </Folder>
+  <Folder Name="/solutionitem/scripts/MySql/Seed/">
+    <File Path="solutionItem/scripts/MySql/Seed/000-build-schema.sql" />
+  </Folder>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Application/">
+    <Project Path="src/Application/CoreQuant.Application.Contracts/CoreQuant.Application.Contracts.csproj" />
+    <Project Path="src/Application/CoreQuant.Application/CoreQuant.Application.csproj" />
+  </Folder>
+  <Folder Name="/src/Common/">
+    <Project Path="src/Common/Common.Application/Common.Application.csproj" />
+    <Project Path="src/Common/Common.Domain/Common.Domain.csproj" />
+    <Project Path="src/Common/Common.Framework/Common.Framework.csproj" />
+  </Folder>
+  <Folder Name="/src/Common/Hosts/">
+    <Project Path="src/Common/Hosts/Common.Api/Common.Api.csproj" />
+    <Project Path="src/Common/Hosts/Common.Consumer/Common.Consumer.csproj" />
+    <Project Path="src/Common/Hosts/Common.Scheduler/Common.Scheduler.csproj" />
+    <Project Path="src/Common/Hosts/Common.Worker/Common.Worker.csproj" />
+  </Folder>
+  <Folder Name="/src/Common/Infrastructure/">
+    <Project Path="src/Common/Infrastructure/Common.Infrastructure.Persistence.EF/Common.Infrastructure.Persistence.EF.csproj" />
+    <Project Path="src/Common/Infrastructure/Common.Infrastructure.Persistence/Common.Infrastructure.Persistence.csproj" />
+    <Project Path="src/Common/Infrastructure/Common.Infrastructure/Common.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Domain/">
+    <Project Path="src/Domain/CoreQuant.Domain/CoreQuant.Domain.csproj" />
+  </Folder>
+  <Folder Name="/src/Framework/">
+    <Project Path="src/Framework/CoreQuant.Framework/CoreQuant.Framework.csproj" />
+  </Folder>
+  <Folder Name="/src/Hosts/" />
+  <Folder Name="/src/Hosts/Api/">
+    <Project Path="src/Hosts/Api/CoreQuant.Api/CoreQuant.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Hosts/Consumer/">
+    <Project Path="src/Hosts/Consumer/CoreQuant.Consumer/CoreQuant.Consumer.csproj" />
+  </Folder>
+  <Folder Name="/src/Hosts/Scheduler/">
+    <Project Path="src/Hosts/Scheduler/CoreQuant.Scheduler/CoreQuant.Scheduler.csproj" />
+  </Folder>
+  <Folder Name="/src/Hosts/Worker/">
+    <Project Path="src/Hosts/Worker/CoreQuant.Worker/CoreQuant.Worker.csproj" />
+  </Folder>
+  <Folder Name="/src/Infrastructure/">
+    <Project Path="src/Infrastructure/CoreQuant.Infrastructure.Acl/CoreQuant.Infrastructure.Acl.csproj" />
+    <Project Path="src/Infrastructure/CoreQuant.Infrastructure.Persistence.EF/CoreQuant.Infrastructure.Persistence.EF.csproj" />
+    <Project Path="src/Infrastructure/CoreQuant.Infrastructure/CoreQuant.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/IntegrationTests/">
+    <Project Path="tests/IntegrationTests/Api/CoreQuant.Api.IntegrationTests/CoreQuant.Api.IntegrationTests.csproj" />
+    <Project Path="tests/IntegrationTests/Consumer/CoreQuant.Consumer.IntegrationTests/CoreQuant.Consumer.IntegrationTests.csproj" />
+    <Project Path="tests/IntegrationTests/Scheduler/CoreQuant.Scheduler.IntegrationTests/CoreQuant.Scheduler.IntegrationTests.csproj" />
+    <Project Path="tests/IntegrationTests/Worker/CoreQuant.Worker.IntegrationTests/CoreQuant.Worker.IntegrationTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/UnitTests/" />
+  <Folder Name="/tests/UnitTests/Framework/">
+    <Project Path="tests/UnitTests/Framework.Infrastructure.UnitTests/Framework.Infrastructure.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/Framework.Messaging.UnitTests/Framework.Messaging.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/Framework.Observability.UnitTests/Framework.Observability.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/Framework.Resilience.UnitTests/Framework.Resilience.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/Framework.Security.UnitTests/Framework.Security.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/Framework.Serialization.UnitTests/Framework.Serialization.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/Framework.UnitTests/Framework.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/Framework.Validation.UnitTests/Framework.Validation.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/Framework.Web.UnitTests/Framework.Web.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/UnitTests/Hosts/">
+    <Project Path="tests/UnitTests/CoreQuant.Api.UnitTests/CoreQuant.Api.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/CoreQuant.Consumer.UnitTests/CoreQuant.Consumer.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/CoreQuant.Scheduler.UnitTests/CoreQuant.Scheduler.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/CoreQuant.Worker.UnitTests/CoreQuant.Worker.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/UnitTests/Src/">
+    <Project Path="tests/UnitTests/CoreQuant.Application.UnitTests/CoreQuant.Application.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/CoreQuant.Commen.UnitTests/CoreQuant.Commen.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/CoreQuant.Domain.UnitTests/CoreQuant.Domain.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/CoreQuant.Infrastructure.Acl.UnitTests/CoreQuant.Infrastructure.Acl.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/CoreQuant.Infrastructure.Persistence.EF.UnitTests/CoreQuant.Infrastructure.Persistence.EF.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/CoreQuant.Infrastructure.UnitTests/CoreQuant.Infrastructure.UnitTests.csproj" />
+  </Folder>
+</Solution>

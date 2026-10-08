@@ -1,0 +1,53 @@
+---
+description: Framework sibling assembly contracts — Messaging, Observability, Resilience, Validation, Security, Web, Serialization, Infrastructure. Mechanisms only; no business or vendor clients.
+globs: src/Framework/Framework.*/**/*
+alwaysApply: false
+---
+
+# Framework Layer Contracts
+
+Applies to every `Framework.*` assembly **except** core `Framework` (see `framework-core-contract.mdc`).
+
+Index: `docs/Framework-Layer.md`. Read the matching `docs/Framework.{Name}.md` before adding a type.
+
+## Session protocol
+
+- Do not invent publishers, Result types, ICurrentUser, IResiliencePipelineProvider, or empty recommended folders until the user asks.
+- Do not move CQRS (`Common.Application`), Domain events, `Common.Api`, or Identity password hashing into Framework.
+- Do not add RabbitMQ/Kafka/Keycloak/TARA/SnappPay/EF clients to any Framework assembly.
+- Do not implement audit/business rules here.
+
+## Dependency direction
+
+No `Framework.*` assembly depends on `Common.*`, `Stora.*`, Domain, Application, application Infrastructure, or Presentation.
+
+Allowed edges (only when a type needs them):
+
+- All siblings may reference core `Framework`.
+- Messaging → Serialization.
+- Observability → Infrastructure (Redis options for health).
+- Web → Observability (metrics + correlation keys).
+- Infrastructure / Serialization / Security / Validation / Resilience → core `Framework` only.
+
+No cycles.
+
+## Ownership cheat sheet
+
+| Assembly | Owns | Does not own |
+| --- | --- | --- |
+| Infrastructure | `SystemClock`, Redis options/multiplexer, `AssemblyScanner` | JSON, hashing, EF, business clients |
+| Serialization | `IJsonSerializer` | business converters, ASP.NET input formatters |
+| Security | SHA/HMAC `IHashService` | Keycloak, password hashing, business permissions |
+| Validation | FluentValidation **registration** | domain validators, CQRS pipeline (Common) |
+| Resilience | HTTP standard pipeline, `ExponentialBackoff` | `TaraResiliencePipeline` |
+| Observability | logs, metrics, traces, health, `CorrelationKeys` | HTTP middleware (Web), business audit |
+| Messaging | `MessageEnvelope`, `IWorkLease` | business events, broker transports |
+| Web | correlation + HTTP metrics middleware | business controllers, identity vendors |
+
+## Redis / product-name leaks (do not expand)
+
+Redis lease + multiplexer + health check are documented exceptions. Do not add Redis streams/pub-sub or product-name hardcoding.
+
+## Admission
+
+Generic, reusable, no business concept, correct owner assembly, no new vendor coupling.

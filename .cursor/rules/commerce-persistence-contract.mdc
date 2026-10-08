@@ -1,0 +1,1077 @@
+---
+description: Commerce Persistence layer contract — DDD/CQRS/EF Core/MySQL rules, DbContexts, repositories, soft delete, mappings, indexes, migrations, and conflict protocol.
+alwaysApply: true
+---
+
+# Commerce Persistence Contract
+
+This session designs and implements the Persistence layer of a production-grade e-commerce backend (Stora).
+
+Schema plan and phased mapping: `docs/Database.md`. Read it before designing or implementing persistence changes.
+
+Treat all rules in this document as the mandatory architectural contract for the Persistence layer.
+
+These rules must be preserved and applied consistently in all future Persistence-related implementations, refactorings, mappings, repositories, DbContexts, migrations, indexes, constraints, and database schema changes.
+
+If a requested implementation conflicts with these rules, DO NOT silently violate the rules.
+Instead:
+1. Identify the conflict.
+2. Explain the reason.
+3. Propose the safest compliant alternative.
+4. Only deviate after explicit approval.
+
+## Session protocol
+
+- Keep this overview in mind. Do not start implementation, scaffolding, or phasing until the user explicitly asks.
+- When the user gives a task, do only that task. Do not jump ahead.
+- Before implementing anything, inspect the existing Domain model, Application repositories, DbContexts, configurations, migrations, and `docs/Database.md`.
+- Preserve existing naming, namespaces, project references, and established infrastructure unless explicitly asked to change them.
+- Never silently remove, merge, rename, or reorganize an existing persistence concept. Propose first.
+- Do not introduce an alternative architecture merely because it is considered a generic best practice.
+- If an architectural decision is ambiguous, stop and ask rather than making an assumption.
+- Do not implement future phases unless explicitly requested.
+
+### Stora project conventions (official overrides)
+
+These names are **approved project conventions**. Do not rename them to match generic contract examples.
+
+| Generic contract name | Stora project convention |
+| --- | --- |
+| `UpdatedAt` | `ModifiedAt` |
+| `UpdatedBy` | `ModifiedBy` |
+| `WriteDbContext` | `StoraWriteDbContext` |
+| `ReadDbContext` | `StoraReadDbContext` |
+| Command bus | `ICommandBus` |
+| Query bus | `IQueryBus` |
+| EF Core parameterless constructor | Private parameterless constructor (domain-approved) |
+
+Additional Stora defaults:
+
+- Row audit actors: `CreatedBy`, `ModifiedBy`, `DeletedBy` (`long?` UserId snowflake).
+- Soft delete: `DeletedAt` + global query filter (`IsDeleted` is derived on `Entity<TId>`).
+- Schema plan: `docs/Database.md`.
+- CQRS dispatch: `ICommandBus` / `IQueryBus` — not MediatR.
+
+If legacy code or docs conflict with this contract, follow **Conflict Handling** (§53): fix in scope; report before large architectural changes.
+
+---
+
+# 1. Architecture Boundaries
+
+MUST:
+
+- Keep Persistence responsible only for database access, EF Core mapping, database-specific behavior, and persistence concerns.
+- Respect DDD, Clean Architecture, and Onion Architecture boundaries.
+- Keep Domain independent from Persistence and EF Core.
+- Keep business rules inside Domain/Application.
+- Keep database concerns inside Persistence.
+
+MUST NOT:
+
+- Put business logic inside Persistence.
+- Put authorization logic inside Persistence.
+- Put API concerns inside Persistence.
+- Put DTO mapping for API responses inside repositories.
+- Modify the Domain model merely to make EF Core mapping easier.
+- Introduce database-specific dependencies into Domain.
+
+Database schema and EF Core mapping must adapt to the Domain model, not the other way around, unless an explicit architectural decision says otherwise.
+
+---
+
+# 2. Domain Must Remain Persistence-Ignorant
+
+The Domain layer MUST NOT reference:
+
+- EF Core
+- DbContext
+- DbSet
+- IQueryable
+- IEntityTypeConfiguration
+- EntityTypeBuilder
+- EF.Functions
+- EF Core-specific attributes
+- EF Core-specific Data Annotations
+- MySQL-specific types or APIs
+- Persistence implementations
+
+Persistence-specific behavior belongs exclusively in Persistence.
+
+Allowed Domain exception already approved: **private parameterless constructor** on `Entity<TId>` / `AggregateRoot<TId>` for EF materialization only.
+
+---
+
+# 3. Entity Configuration
+
+Every persistent Entity/Aggregate must have its own Entity Configuration.
+
+Required structure:
+
+```text
+Product.cs
+ProductConfiguration.cs
+```
+
+Each configuration MUST:
+
+- Be placed in its own file.
+- Implement `IEntityTypeConfiguration<T>`.
+- Explicitly configure the Entity.
+- Be automatically registered through `ApplyConfigurationsFromAssembly` or equivalent assembly scanning.
+
+DO NOT place multiple Entity Configurations in one file.
+
+One aggregate (or owned entity group) = **one** `*Configuration.cs` file. No shared giant configuration base that maps many aggregates at once.
+
+---
+
+# 4. Explicit Property Configuration
+
+EVERY persistent property MUST be explicitly configured inside its Entity Configuration.
+
+This requirement applies even when the desired behavior is identical to EF Core's default convention.
+
+The purpose is to make persistence rules self-documenting and explicit.
+
+For every applicable property, explicitly define characteristics such as:
+
+- Required / Nullable
+- Maximum length
+- Database type
+- Precision / Scale
+- Enum conversion
+- Value generation
+- Default value
+- Computed behavior
+- Concurrency behavior
+- Other relevant persistence characteristics
+
+Example:
+
+```csharp
+builder.Property(x => x.Name)
+    .HasMaxLength(200)
+    .IsRequired();
+```
+
+Do not rely on EF Core conventions when an important persistence characteristic should be documented explicitly.
+
+Shared audit/concurrency columns MAY use `AuditableEntityConfiguration.Configure()` — but each aggregate configuration must still invoke it explicitly.
+
+---
+
+# 5. Database Naming
+
+Database names MUST match Domain model names unless an explicit legacy/database requirement requires otherwise.
+
+Examples:
+
+```text
+Product       -> Product
+ProductId     -> ProductId
+CreatedAt     -> CreatedAt
+```
+
+The project does NOT use a snake_case database naming convention.
+
+DO NOT introduce:
+
+- snake_case conversion
+- automatic pluralization
+- unnecessary custom naming conventions
+
+If EF Core conventions already generate the correct database name, do not add redundant `HasColumnName` configuration.
+
+For example, prefer:
+
+```csharp
+builder.Property(x => x.Id);
+```
+
+instead of unnecessarily writing:
+
+```csharp
+builder.Property(x => x.Id)
+    .HasColumnName(nameof(Product.Id));
+```
+
+If explicit naming is genuinely required, use `nameof()` whenever possible instead of magic strings.
+
+Magic strings for Domain/database member names are prohibited.
+
+---
+
+# 6. Aggregate Boundaries
+
+Persistence MUST respect Domain Aggregate boundaries.
+
+The fundamental lifecycle rule is:
+
+```text
+Aggregate Root
+    ->
+All members of the same Aggregate
+```
+
+NOT:
+
+```text
+Aggregate Root
+    ->
+Every record that has an FK pointing to it
+```
+
+An FK relationship does NOT automatically mean that the related Entity belongs to the same Aggregate.
+
+If another Entity is an independent Aggregate Root, its lifecycle MUST remain independent.
+
+Never infer Aggregate ownership solely from database relationships.
+
+---
+
+# 7. Aggregate Encapsulation
+
+Aggregate internals MUST remain encapsulated.
+
+External code must not directly manipulate internal entities of an Aggregate.
+
+Example:
+
+```text
+Product
+  ├── ProductVariant
+  ├── ProductDiscount
+  └── ProductImage
+```
+
+Changes to ProductVariant, ProductDiscount, or ProductImage that belong to the Product Aggregate must be performed through the Aggregate Root's domain behavior.
+
+Persistence MUST NOT:
+
+- Add public setters solely for EF Core.
+- Add publicly mutable collections solely for EF Core.
+- Break Aggregate encapsulation for query convenience.
+- Turn internal entities into independent repositories merely because they are persistent.
+
+Private setters, backing fields, and encapsulated collections should remain intact where the Domain model requires them.
+
+---
+
+# 8. EF Core Materialization
+
+EF Core must be able to materialize Domain Entities without compromising their business constructors or encapsulation.
+
+A private parameterless constructor is allowed when required by EF Core.
+
+Example:
+
+```csharp
+private Product()
+{
+}
+```
+
+Such constructors:
+
+- MUST remain non-public.
+- MUST contain no business logic.
+- MUST NOT replace valid business constructors.
+- MUST exist only to support persistence/materialization when necessary.
+
+Do not weaken the Domain API merely for EF Core.
+
+---
+
+# 9. Repository Strategy
+
+Use one repository per Aggregate Root.
+
+Examples:
+
+```text
+IProductRepository
+ICustomerRepository
+IOrderRepository
+```
+
+Generic repositories such as `IRepository<T>` are prohibited.
+
+Repositories for internal child entities are prohibited unless that Entity is itself an independent Aggregate Root.
+
+Repositories MUST:
+
+- Load Aggregates.
+- Add Aggregates.
+- Update Aggregates.
+- Handle Aggregate persistence concerns.
+- Remove Aggregates only through Soft Delete.
+
+Repositories MUST NOT:
+
+- Contain business rules.
+- Perform authorization.
+- Build API responses.
+- Build API DTOs.
+- Call external services.
+- Expose `IQueryable`.
+- Leak EF Core implementation details to higher layers.
+
+Repositories should return Domain Aggregates, not API DTOs.
+
+---
+
+# 10. CQRS
+
+Command and Query responsibilities MUST remain separated.
+
+## Command flow
+
+```text
+Command
+  ->
+Application Handler
+  ->
+Aggregate Repository
+  ->
+Aggregate Root
+  ->
+SaveChanges / Commit
+```
+
+Commands are responsible for state changes.
+
+## Query flow
+
+```text
+Query
+  ->
+Query Handler
+  ->
+ReadDbContext
+  ->
+Database Projection
+  ->
+DTO
+```
+
+Queries SHOULD NOT load Domain Aggregates when a projection is sufficient.
+
+Query-side code should be optimized for read models and required data rather than Domain behavior.
+
+---
+
+# 11. Read/Write Database Separation
+
+The system uses Read/Write separation.
+
+There should be a clear distinction between:
+
+```text
+WriteDbContext
+ReadDbContext
+```
+
+WriteDbContext:
+
+- Handles mutations.
+- Uses the Primary/Write database.
+- Handles transactions.
+- Handles SaveChanges.
+
+ReadDbContext:
+
+- Handles read-only queries.
+- Uses the Replica/Read database.
+- Should not be used to mutate Domain state.
+
+All INSERT, UPDATE, and Soft Delete operations MUST go to the Primary/Write database.
+
+Read operations SHOULD use the Read Replica.
+
+---
+
+# 12. Read-After-Write Consistency
+
+The system MUST account for replica lag.
+
+Do not assume:
+
+```text
+Write to Primary
+    ->
+Immediate Read from Replica
+```
+
+will always return the newly written state.
+
+Read-after-write consistency must be handled through a centralized strategy.
+
+Individual repositories or queries MUST NOT invent their own inconsistent replica-routing behavior.
+
+If a use case requires immediate consistency after a write, the read must be routed appropriately according to the centralized consistency policy.
+
+---
+
+# 13. Query Performance
+
+Database operations must execute as much work as reasonably possible inside the database.
+
+Filtering, sorting, aggregation, projection, and pagination SHOULD happen at database level.
+
+DO NOT:
+
+```text
+ToList()
+    ->
+Filter in memory
+    ->
+Sort in memory
+    ->
+Paginate in memory
+```
+
+Instead, construct the query first and materialize only the required result.
+
+Avoid loading unnecessary records or columns.
+
+---
+
+# 14. Projection
+
+Projection is preferred over loading full Entities for read operations.
+
+Prefer:
+
+```csharp
+.Select(x => new ProductDto
+{
+    ...
+})
+```
+
+Only required columns should be selected.
+
+Do not load full Entity graphs when the Query only needs a subset of data.
+
+---
+
+# 15. Tracking
+
+Read queries MUST use `AsNoTracking()` by default.
+
+Use `AsNoTrackingWithIdentityResolution()` only when identity resolution is actually required.
+
+Tracking MUST NOT be enabled without a clear reason.
+
+`StoraReadDbContext` defaults to NoTracking globally.
+
+---
+
+# 16. Include and Query Splitting
+
+Projection is preferred over Include.
+
+Include should only be used deliberately when Entity graphs are actually required.
+
+Lazy Loading is prohibited.
+
+`AsSplitQuery()` may be used when multiple collection relationships could cause Cartesian explosion.
+
+Do NOT globally enable `AsSplitQuery()` without a demonstrated reason.
+
+Avoid loading large relationship graphs unnecessarily.
+
+---
+
+# 17. N+1 Prevention
+
+N+1 queries are prohibited.
+
+Queries must be designed intentionally to avoid repeatedly querying the database for related data.
+
+Do not use lazy loading as a workaround.
+
+---
+
+# 18. Pagination
+
+Pagination MUST be performed at database level.
+
+Pagination MUST use deterministic ordering.
+
+For example:
+
+```csharp
+OrderBy(x => x.CreatedAt)
+    .ThenBy(x => x.Id)
+```
+
+Avoid unstable pagination based on non-deterministic ordering.
+
+---
+
+# 19. Async
+
+Database operations MUST be asynchronous.
+
+`CancellationToken` must be propagated through the entire call chain.
+
+Prefer `ToListAsync`, `FirstOrDefaultAsync`, `AnyAsync`, etc.
+
+Do not introduce synchronous database calls when an async equivalent exists.
+
+---
+
+# 20. Transactions / Unit of Work
+
+Transactions belong at the Use Case / Command boundary.
+
+Repositories MUST NOT independently commit transactions.
+
+Multiple repository operations belonging to one Command must participate in the same transaction.
+
+SaveChanges/Commit should be controlled centrally.
+
+If a Unit of Work abstraction exists, it should coordinate the transaction/commit rather than individual repositories.
+
+---
+
+# 21. Physical Delete Is Forbidden
+
+PHYSICAL DELETE IS COMPLETELY PROHIBITED.
+
+The system MUST NOT physically remove persistent records from the database.
+
+Do NOT use `DbSet.Remove()` or `DbSet.RemoveRange()` for physical deletion.
+
+Every deletion operation must be implemented as Soft Delete.
+
+This is a mandatory architectural rule.
+
+---
+
+# 22. Soft Delete
+
+Entities that participate in a deletable lifecycle MUST support Soft Delete.
+
+At minimum:
+
+- `IsDeleted` (derived from `DeletedAt` in Stora domain)
+- `DeletedAt`
+
+Optionally, when required:
+
+- `DeletedBy`
+
+Soft Delete behavior must be explicit and consistent.
+
+---
+
+# 23. Global Soft Delete Filtering
+
+Normal queries MUST NOT return Soft Deleted records.
+
+This behavior should be centralized, preferably through EF Core Global Query Filters.
+
+Example:
+
+```csharp
+HasQueryFilter(x => x.DeletedAt == null)
+```
+
+Access to Soft Deleted records must be explicit.
+
+Administrative/history queries may use `IgnoreQueryFilters()` but only when intentionally required.
+
+Do not duplicate soft-delete filtering manually throughout every query when a centralized mechanism can safely enforce it.
+
+---
+
+# 24. Aggregate Soft Delete Cascade
+
+When an Aggregate Root is Soft Deleted, ALL persistent records belonging to that SAME Aggregate MUST also be Soft Deleted.
+
+Example:
+
+```text
+Product
+  ├── ProductVariant
+  ├── ProductImage
+  ├── ProductDiscount
+  └── ProductAttribute
+```
+
+If Product is Soft Deleted, all members above must be soft-deleted too.
+
+The Aggregate must never be left in a partially active state where the Root is deleted but its internal persistent members remain active.
+
+The operation MUST be atomic and transactional.
+
+If Soft Delete of any required Aggregate member fails, the entire operation MUST be rolled back.
+
+IMPORTANT:
+
+Soft Delete cascade applies ONLY to members of the SAME Aggregate.
+
+It MUST NOT be based merely on FK relationships.
+
+Example: `Product -> Vendor` — deleting Product MUST NOT soft-delete Vendor if Vendor is an independent Aggregate Root.
+
+---
+
+# 25. Primary Keys
+
+Primary Keys MUST be explicitly configured.
+
+The following must be intentional and explicit:
+
+- PK type
+- Generation strategy
+- Database-generated behavior
+- Auto-increment behavior when applicable
+
+For inherently non-negative identifiers, use MySQL UNSIGNED types where appropriate.
+
+Examples: `INT UNSIGNED`, `BIGINT UNSIGNED`
+
+Stora uses snowflake `long` ids — `BIGINT UNSIGNED`, application-assigned (no `AUTO_INCREMENT` on aggregate PKs).
+
+Do not choose signed/unsigned types arbitrarily.
+
+---
+
+# 26. Non-Negative Numeric Values
+
+Any numeric value that is semantically guaranteed by the Domain to never be negative SHOULD use an UNSIGNED MySQL type.
+
+Examples: IDs, product price, quantity, count, sequence, non-negative amounts.
+
+Do NOT use UNSIGNED merely because a value is usually positive.
+
+If negative values are valid according to the Domain, use a signed numeric type.
+
+---
+
+# 27. Time Values
+
+All applicable persisted time/date values MUST use MySQL's native `TIMESTAMP` type.
+
+The requirement is specifically MySQL TIMESTAMP.
+
+Do NOT use Unix timestamps (long seconds/milliseconds) for persisted time fields.
+
+Examples: `CreatedAt`, `ModifiedAt`, `DeletedAt`, `PublishedAt`, `ExpiresAt`.
+
+Example:
+
+```csharp
+builder.Property(x => x.CreatedAt)
+    .HasColumnType("timestamp")
+    .IsRequired();
+```
+
+Timezone behavior MUST be consistent across the system.
+
+---
+
+# 28. String Length Rules
+
+String length MUST always be explicitly configured.
+
+General upper bounds:
+
+- **Persian / Unicode strings**: maximum 512 characters
+- **English / ASCII strings**: maximum 1028 characters
+
+These are GENERAL upper bounds, not a replacement for domain-specific constraints.
+
+If a property has a shorter Domain-specific maximum, the shorter value MUST be used.
+
+Examples: SKU, CurrencyCode, Phone, Email, CountryCode must use appropriate domain-specific lengths.
+
+The Agent MUST NOT inspect actual string content to guess whether a field is Persian or English. The field's Domain/contract semantics determine the appropriate category.
+
+---
+
+# 29. Decimal / Money
+
+All Decimal properties MUST explicitly define Precision and Scale.
+
+Example: `.HasPrecision(18, 2)`
+
+The exact Precision/Scale must be selected according to the Domain requirements.
+
+Do not blindly apply one Precision/Scale to every Decimal field.
+
+If a monetary value is guaranteed to be non-negative by the Domain, its MySQL representation should also respect the UNSIGNED rule.
+
+---
+
+# 30. Enum Persistence
+
+Enum persistence MUST be explicit and consistent.
+
+The mapping must intentionally define whether the enum is persisted as Integer or String.
+
+Do not rely on accidental or undocumented provider behavior.
+
+The chosen strategy should be consistent across the project unless there is a documented reason to deviate.
+
+Domain enums use Persian `[Description]` metadata — persistence strategy is still explicit int/string mapping in configuration.
+
+---
+
+# 31. Nullable Properties
+
+Nullable columns MUST have actual Domain meaning.
+
+Do not make a property nullable simply because it is convenient for EF Core.
+
+If absence of a value is invalid according to the Domain, the database column MUST be NOT NULL.
+
+---
+
+# 32. Foreign Keys
+
+Every Foreign Key MUST:
+
+- Be explicitly configured.
+- Have exactly the same compatible type as the referenced PK.
+- Match signed/unsigned semantics.
+- Explicitly define the relationship.
+- Explicitly define DeleteBehavior.
+- Have an index.
+
+Example: if `Product.Id` is `BIGINT UNSIGNED`, then `ProductVariant.ProductId` must be compatible.
+
+---
+
+# 33. Foreign Key Indexes
+
+EVERY Foreign Key MUST have an index.
+
+This is mandatory.
+
+Do not leave FK indexing dependent on assumptions about MySQL or EF Core conventions.
+
+---
+
+# 34. DeleteBehavior
+
+Delete behavior MUST be explicitly configured for relationships.
+
+Do not rely blindly on EF Core's default DeleteBehavior.
+
+Possible behaviors include: Restrict, NoAction, Cascade, Client behavior where appropriate.
+
+The chosen behavior must respect Aggregate boundaries and the project's Soft Delete strategy.
+
+IMPORTANT: Cascade Delete MUST NOT be used as a mechanism for implementing Soft Delete.
+
+Soft Delete cascade must be handled intentionally at the application/domain persistence level according to Aggregate ownership.
+
+---
+
+# 35. Business Uniqueness
+
+Any value that is required to be unique by business rules MUST be enforced at database level.
+
+Examples: customer phone, product SKU, invoice number, email when business-unique, vendor external ID, tracking code, external identifiers.
+
+Application-level checks are NOT sufficient.
+
+The database MUST enforce uniqueness using UNIQUE INDEX or UNIQUE CONSTRAINT.
+
+---
+
+# 36. Composite Uniqueness
+
+When uniqueness depends on multiple columns, use a Composite Unique Index/Constraint.
+
+Example: `(VendorId, ExternalId)`
+
+Do not incorrectly make each individual column unique when only the combination is required to be unique.
+
+---
+
+# 37. Soft Delete and Unique Constraints
+
+Unique constraints MUST be designed intentionally in the presence of Soft Delete.
+
+For every unique business value, explicitly determine whether a Soft Deleted record should:
+
+1. Continue reserving the unique value, or
+2. Release the value so that a new active record can reuse it.
+
+Do not let this behavior be an accidental consequence of the database schema.
+
+---
+
+# 38. Audit Fields
+
+Where auditing is required, standard audit fields may include:
+
+```text
+CreatedAt, CreatedBy, ModifiedAt, ModifiedBy, DeletedAt, DeletedBy
+```
+
+Audit behavior should be centralized.
+
+Do not duplicate audit-setting logic across repositories.
+
+A SaveChanges interceptor or equivalent centralized mechanism may be used.
+
+Interceptors MUST NOT contain business logic.
+
+---
+
+# 39. Audit Indexes
+
+Audit fields that are actually used for filtering, sorting, reporting, retention, or operational queries MUST have appropriate indexes.
+
+Common examples: `CreatedAt`, `ModifiedAt`, `DeletedAt`
+
+However, do not blindly index every audit field.
+
+Every non-mandatory index should have a concrete query or operational purpose.
+
+---
+
+# 40. Index Strategy
+
+Indexes MUST be purpose-driven.
+
+Valid reasons include: Foreign Key, Uniqueness, Filtering, Sorting, Pagination, Search, Reporting, known query patterns.
+
+Avoid over-indexing.
+
+For Composite Indexes, column order MUST follow the actual query/access pattern.
+
+---
+
+# 41. Database Constraints
+
+Whenever a Domain invariant can and should be enforced by the database, the database should enforce it as well.
+
+Examples: NOT NULL, UNIQUE, FOREIGN KEY, CHECK where supported and appropriate.
+
+Application validation does NOT replace database integrity constraints.
+
+---
+
+# 42. Charset and Collation
+
+Database charset and collation strategy MUST be intentional and consistent.
+
+Do not randomly define charset/collation per property.
+
+For unique fields (Email, SKU, External IDs), the intended case-sensitivity and uniqueness semantics MUST be understood.
+
+MySQL collation behavior must not accidentally change business uniqueness.
+
+Stora default: `utf8mb4_unicode_ci` at database level unless explicitly overridden.
+
+---
+
+# 43. MySQL-Specific Behavior
+
+Persistence MUST be explicitly MySQL-aware.
+
+Do not assume SQL Server, PostgreSQL, or SQLite behavior.
+
+Pay particular attention to: UNSIGNED, TIMESTAMP, DECIMAL, AUTO_INCREMENT, Charset, Collation, Foreign Keys, Index limitations, JSON, Storage Engine, MySQL-specific type mappings.
+
+Transactional tables should normally use InnoDB unless there is a specific reason not to.
+
+Provider: `Microting.EntityFrameworkCore.MySql` for EF Core 10.
+
+Integration tests may use Sqlite as a stand-in for wiring; MySQL-specific behavior must be validated against real MySQL.
+
+---
+
+# 44. JSON
+
+JSON MUST NOT be used as a shortcut to avoid proper relational database design.
+
+If data has stable structure, relationships, constraints, or frequent querying, it should normally be modeled relationally.
+
+JSON should be used only when the data is genuinely semi-structured or there is a documented architectural reason.
+
+---
+
+# 45. Denormalization
+
+Do not duplicate data without an intentional reason.
+
+Denormalization is allowed when justified by performance, reporting, historical snapshots, immutability, or read-model optimization.
+
+Denormalized data must have clearly defined ownership and consistency rules.
+
+---
+
+# 46. Referential Integrity
+
+Soft Delete MUST NOT break database referential integrity.
+
+A Soft Deleted record still physically exists in the database.
+
+Therefore: FKs remain valid; related records remain referentially valid; physical FK removal must not be used as part of Soft Delete.
+
+---
+
+# 47. Migrations
+
+Migrations MUST be incremental, deterministic, reviewable, and production-safe.
+
+DO NOT introduce destructive migration operations without explicit approval.
+
+Examples requiring explicit approval: DROP TABLE, DROP COLUMN, destructive type changes, data loss, irreversible transformations.
+
+Data migrations must be designed safely.
+
+HasData should normally be used only for static/reference data, not business data.
+
+Migrations target `StoraWriteDbContext` only.
+
+---
+
+# 48. Outbox / Domain Events
+
+If the application uses an Outbox pattern:
+
+Aggregate state changes and corresponding Outbox records MUST be persisted atomically within the same transaction.
+
+Do not call external services directly before the transaction is successfully committed when that would create consistency problems.
+
+Desired flow:
+
+```text
+Aggregate State Change + Outbox Event
+        ↓
+Same Transaction
+        ↓
+Commit
+```
+
+---
+
+# 49. Concurrency
+
+Concurrency strategy MUST be intentional.
+
+Do not add concurrency mechanisms to every Entity without a business or technical requirement.
+
+Where Optimistic Concurrency is required:
+
+- Mapping must be explicit (`version INT UNSIGNED` concurrency token on auditable entities).
+- The concurrency behavior must be tested.
+- Conflict handling must be deliberate.
+
+---
+
+# 50. Large Data / Performance
+
+Avoid loading large datasets unnecessarily.
+
+Prohibited patterns include: loading an entire table when unnecessary, calling ToList() too early, filtering/sorting/paginating after materialization, loading unnecessary relationships or columns.
+
+Queries must retrieve only the required data.
+
+---
+
+# 51. Testing
+
+Persistence MUST be covered by integration tests.
+
+At minimum, test: entity mappings, PKs, FKs, FK indexes, unique indexes, composite unique indexes, nullability, string lengths, decimal precision/scale, UNSIGNED mappings, TIMESTAMP mappings, soft delete, global query filters, aggregate soft delete cascade, transaction behavior, concurrency where applicable, query projections, pagination, MySQL-specific behavior, migrations.
+
+EF Core InMemory is NOT sufficient to prove MySQL correctness.
+
+MySQL-specific behavior should be tested against a real MySQL instance, preferably through integration tests/containerized infrastructure.
+
+---
+
+# 52. Agent Behavior Rules
+
+Before implementing or modifying Persistence code, the Agent MUST:
+
+1. Inspect the existing Domain model.
+2. Identify Aggregate Roots.
+3. Identify Aggregate boundaries.
+4. Identify Entities and Value Objects.
+5. Identify relationships.
+6. Identify ownership/lifecycle semantics.
+7. Identify existing Persistence conventions.
+8. Identify existing DbContexts.
+9. Identify existing migrations.
+10. Identify existing repository patterns.
+11. Identify existing indexing and constraint conventions.
+12. Then implement the Persistence change.
+
+The Agent MUST NOT make assumptions about Aggregate boundaries merely from database relationships.
+
+---
+
+# 53. Conflict Handling
+
+If existing code violates these rules:
+
+- Do not silently copy the violation.
+- Identify the violation.
+- Explain the impact.
+- Fix it when the current task reasonably includes that scope.
+- If fixing it would cause a large architectural change, report it before proceeding.
+
+If the Domain model itself conflicts with these rules, DO NOT arbitrarily modify the Domain.
+
+First explain the conflict and propose the minimum safe architectural change.
+
+---
+
+# 54. Best-Practice Enforcement
+
+These rules are the project's minimum architectural contract, not the maximum level of quality.
+
+In addition to following these explicit rules, the Agent MUST actively identify important Database/Persistence best-practice issues that have not been explicitly mentioned.
+
+Examples: incorrect index design, incorrect FK types, incorrect collation, incorrect uniqueness semantics, poor transaction boundaries, replica consistency issues, unsafe migrations, N+1 queries, Cartesian explosion, missing constraints, incorrect MySQL type selection, accidental data duplication, incorrect aggregate lifecycle handling, incorrect soft delete behavior, potential data loss, performance problems, concurrency problems.
+
+If such an issue is discovered, explicitly report it instead of silently implementing a potentially unsafe solution.
+
+---
+
+# 55. Priority Order
+
+When making Persistence decisions, use this priority order:
+
+1. Domain and Aggregate integrity
+2. Data integrity
+3. Architectural boundaries
+4. Business invariants
+5. Transactional consistency
+6. Persistence correctness
+7. Query correctness
+8. Performance
+9. Maintainability
+10. Implementation convenience
+
+Implementation convenience MUST NEVER override Domain integrity, data integrity, or architectural boundaries.
+
+---
+
+# Final Rule
+
+Treat this document as the mandatory Persistence Architecture Contract.
+
+Every future Persistence implementation MUST be evaluated against these rules.
+
+If a proposed implementation violates any rule:
+
+```text
+STOP
+IDENTIFY THE VIOLATION
+EXPLAIN WHY
+PROPOSE A COMPLIANT SOLUTION
+```
+
+Do not silently violate the architecture for convenience.

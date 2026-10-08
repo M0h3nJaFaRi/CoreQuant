@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: service-consumer-properties
+  namespace: service
+data:
+  # =========================
+  # Host
+  # =========================
+  DOTNET_ENVIRONMENT: "Production"
+  ApplicationName: "CoreQuant.Consumer"
+
+  # =========================
+  # Serilog
+  # =========================
+  Framework__Serilog__MinimumLevel__Default: "Warning"
+  Framework__Serilog__MinimumLevel__Override__Microsoft_Hosting_Lifetime: "Information"
+  Framework__Serilog__MinimumLevel__Override__Microsoft.Hosting.Lifetime: "Information"
+  Framework__Serilog__MinimumLevel__Override__System: "Warning"
+  Framework__Serilog__Console__Enabled: "false"
+
+  # =========================
+  # Syslog
+  # =========================
+  Framework__Syslog__Enabled: "false"
+  Framework__Syslog__Address: ""
+  Framework__Syslog__Port: "0"
+  Framework__Syslog__Format: "RFC5424"
+  Framework__Syslog__RestrictedToMinimumLevel: "Information"
+
+  # =========================
+  # Health
+  # =========================
+  Framework__Health__LivenessPath: "/health/live"
+  Framework__Health__ReadinessPath: "/health/ready"
+
+  # =========================
+  # Metrics
+  # =========================
+  Framework__Metrics__Enabled: "true"
+  Framework__Metrics__Path: "/metrics"
+
+  # =========================
+  # Resilience
+  # =========================
+  Framework__Resilience__Retry__UseJitter: "true"
+  Framework__Resilience__Retry__Delay: "00:00:02"
+  Framework__Resilience__Retry__MaxRetryAttempts: "3"
+  Framework__Resilience__Timeout: "00:00:15"
+  Framework__Resilience__CircuitBreaker__FailureThreshold: "3"
+  Framework__Resilience__CircuitBreaker__BreakDuration: "00:01:00"
+
+  # =========================
+  # Encryption (non-secret)
+  # =========================
+  Framework__Encryption__RSA__PublicKey: ""

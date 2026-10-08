@@ -1,0 +1,781 @@
+---
+description: Commerce Presentation layer contract — ASP.NET Core 10, REST API, CQRS, Application Contracts, HTTP semantics, cross-cutting concerns, organization, documentation, and implementation protocol.
+alwaysApply: true
+---
+
+# Commerce Presentation Contract
+
+This session designs and implements the Presentation layer of a production-grade e-commerce backend (Stora).
+
+The Presentation layer is responsible for exposing Application capabilities through HTTP APIs.
+
+The Presentation layer MUST remain thin and MUST NOT contain business logic, domain logic, persistence logic, or cross-cutting logic that belongs to middleware or CQRS pipeline behaviors.
+
+---
+
+## Session protocol
+
+- Keep this overview in mind. Do not start implementation, scaffolding, or phasing until the user explicitly asks.
+- When the user gives a task, do only that task. Do not jump ahead.
+- Before implementing anything, inspect the existing solution and identify the established Presentation, Application, Application.Contracts, CQRS, authentication, authorization, error handling, and middleware conventions.
+- Preserve existing naming, namespaces, project references, API conventions, and established infrastructure unless explicitly asked to change them.
+- Never silently remove, merge, rename, or reorganize an existing API concept. Propose first.
+- Do not introduce an alternative architecture, framework, or pattern merely because it is considered a generic best practice.
+- If an architectural decision is ambiguous, stop and ask rather than making an assumption.
+- Do not implement future phases unless explicitly requested.
+
+---
+
+# Architecture
+
+Follow Clean Architecture, CQRS, REST principles, SOLID, separation of concerns, and the existing solution architecture.
+
+The Presentation layer is an HTTP adapter over the Application layer.
+
+The intended dependency direction is:
+
+HTTP
+  ↓
+Presentation
+  ↓
+Application.Contracts
+  ↓
+Application
+  ↓
+Domain / Infrastructure
+
+Presentation MUST NOT bypass Application and directly access Domain internals, repositories, DbContext, or infrastructure services.
+
+---
+
+# Application boundary
+
+The solution contains two separate Application assemblies:
+
+- `Application.Contracts`
+- `Application`
+
+These assemblies have distinct responsibilities.
+
+## Application.Contracts
+
+`Application.Contracts` is the contract boundary consumed by Presentation.
+
+Commands, Queries, Request/Response contracts, DTOs, Result contracts, and other Application-facing contracts MUST live in `Application.Contracts` according to the existing project conventions.
+
+Presentation MUST consume these contracts instead of defining duplicate versions locally.
+
+Do not create Presentation-specific copies of existing Application Contracts.
+
+Incorrect:
+
+Presentation
+  └── Contracts
+      └── CreateProductRequest.cs
+
+when the corresponding contract already exists in:
+
+Application.Contracts
+  └── Products
+      └── Commands
+          └── CreateProductCommand.cs
+
+---
+
+## Application
+
+Application contains the execution logic for Commands and Queries.
+
+Command and Query Handlers MUST live in the `Application` assembly.
+
+Presentation MUST NOT contain:
+
+- Command Handlers
+- Query Handlers
+- Application business workflows
+- Repository implementations
+- Domain behavior
+
+The expected flow is:
+
+HTTP Request
+    ↓
+Controller
+    ↓
+Command / Query
+    ↓
+CQRS Pipeline
+    ↓
+Handler
+    ↓
+Domain / Repository / Infrastructure
+
+## Controllers
+
+Controllers MUST remain thin.
+
+A Controller is responsible only for HTTP concerns and orchestration.
+
+A Controller MAY:
+
+- Receive HTTP requests.
+- Bind route, query, header, and body parameters.
+- Dispatch Commands and Queries.
+- Define HTTP routes and methods.
+- Apply endpoint-level authorization metadata.
+- Translate Application results into HTTP responses according to the existing response conventions.
+
+A Controller MUST NOT:
+
+- Implement business rules.
+- Access repositories directly.
+- Access DbContext.
+- Access Domain Entities directly for mutation.
+- Call external services directly.
+- Implement validation logic.
+- Implement generic cross-cutting behavior.
+- Implement transaction handling.
+- Implement exception handling that belongs to global infrastructure.
+- Implement logging/tracing infrastructure.
+- Implement caching logic.
+- Implement rate limiting logic.
+- Implement retry logic.
+
+# CQRS
+
+Commands and Queries MUST remain strictly separated.
+
+## Commands
+
+Commands represent operations that may change application or domain state.
+
+Examples:
+
+- Create
+- Update
+- Delete
+- Activate
+- Deactivate
+- Confirm
+- Cancel
+- Assign
+- Process
+
+## Queries
+
+Queries represent read-only operations.
+
+Examples:
+
+- Get
+- GetById
+- GetByCode
+- Search
+- List
+- Exists
+- Count
+
+A Query MUST NOT modify application or domain state.
+
+A Command MUST NOT be introduced merely to retrieve data.
+
+## CQRS dispatching
+
+Controllers MUST dispatch Commands and Queries through the existing CQRS abstraction.
+
+This solution uses `ICommandBus` / `IQueryBus` (`Common.Application.Cqrs`), not MediatR `ISender`.
+
+Controllers MUST NOT instantiate Handlers directly.
+
+Incorrect:
+
+```csharp
+var handler = new CreateProductCommandHandler(...);
+```
+
+Correct:
+
+```csharp
+await commandBus.SendAsync(command, cancellationToken);
+await queryBus.SendAsync(query, cancellationToken);
+```
+
+---
+
+# Validation
+
+Validation of Commands and Queries MUST be performed through the existing CQRS validation pipeline.
+
+The Presentation layer MUST NOT validate Command or Query business/application input manually.
+
+The project uses a dedicated validation pipeline behavior/handler.
+
+The expected flow is:
+
+HTTP Request
+    ↓
+Controller
+    ↓
+Command / Query
+    ↓
+Validation Pipeline
+    ↓
+Handler
+
+Do NOT add:
+
+- `if` validation blocks inside Controllers.
+- Manual Command/Query validation inside Controllers.
+- Duplicate validation rules in Controllers.
+- A second validation framework unless explicitly requested.
+- Controller-level validation helpers.
+
+ASP.NET model binding concerns MAY still be handled by ASP.NET Core where required by the HTTP framework, but Application validation belongs to the CQRS pipeline.
+
+---
+
+# Cross-cutting concerns
+
+Generic or cross-cutting behavior MUST NOT be implemented inside the Presentation layer merely because it is used by an endpoint.
+
+If a concern applies to multiple endpoints or represents infrastructure/application-wide behavior, implement it in the appropriate cross-cutting mechanism.
+
+Examples:
+
+| Concern | Preferred location |
+| --- | --- |
+| Exception handling | Middleware |
+| Validation | CQRS Pipeline |
+| Transactions | CQRS Pipeline |
+| Logging | Middleware / Pipeline |
+| Performance measurement | Pipeline |
+| Authorization behavior | Authorization / Pipeline |
+| Authentication | ASP.NET Core middleware |
+| Correlation ID | Middleware |
+| Rate limiting | Middleware |
+| Global error handling | Middleware |
+| Retry | Resilience infrastructure |
+| Caching | Appropriate application/infrastructure layer |
+
+Do not duplicate cross-cutting behavior inside individual Controllers.
+
+---
+
+# REST API rules
+
+The API MUST follow REST principles and standard HTTP semantics.
+
+## Resource-oriented URLs
+
+Use nouns to represent resources.
+
+Correct:
+
+```text
+GET    /api/v1/products
+GET    /api/v1/products/{id}
+POST   /api/v1/products
+PUT    /api/v1/products/{id}
+PATCH  /api/v1/products/{id}
+DELETE /api/v1/products/{id}
+```
+
+Incorrect:
+
+```text
+GET  /api/v1/getProducts
+POST /api/v1/createProduct
+POST /api/v1/deleteProduct
+GET  /api/v1/getProductById/{id}
+```
+
+---
+
+## HTTP method semantics
+
+Use HTTP methods according to their intended semantics.
+
+GET:
+- Read resources.
+- MUST NOT modify state.
+
+POST:
+- Create a new resource.
+- Execute a domain action when no appropriate resource mutation semantics exist.
+- Generally represents a non-idempotent operation.
+
+PUT:
+- Full replacement of a resource.
+- Should be idempotent.
+
+PATCH:
+- Partial modification of a resource.
+
+DELETE:
+- Remove a resource.
+- Should be idempotent.
+
+Do not use POST for every operation merely because it is convenient.
+
+---
+
+# REST domain actions
+
+Domain actions MAY use action-oriented sub-resources when they represent meaningful state transitions.
+
+Correct:
+
+```text
+POST /api/v1/payments/{id}/confirm
+POST /api/v1/payments/{id}/cancel
+POST /api/v1/payments/{id}/refund
+```
+
+Prefer these over:
+
+```text
+POST /api/v1/confirm-payment
+POST /api/v1/cancel-payment
+```
+
+when the action clearly belongs to the resource.
+
+The decision MUST follow the existing API conventions and ubiquitous language.
+
+---
+
+# Stateless API
+
+The API MUST remain stateless.
+
+Controllers MUST NOT maintain request/session/business state between requests.
+
+Do not use:
+
+- Static mutable state.
+- Controller-level state stores.
+- In-memory business state.
+- Session state for domain/application state.
+
+State that must survive requests belongs to the appropriate Application/Infrastructure/Persistence mechanism.
+
+---
+
+# API versioning
+
+All public API endpoints MUST follow the existing URL versioning strategy:
+
+```text
+/api/v1/{resource}
+```
+
+API versions are isolated by inheriting a version base controller, not by adding `V1`/`V2` methods on the same resource controller.
+
+```text
+ControllerBase
+    └── MainController
+            ├── ControllerV1 → Controllers/V1/{Resource}Controller
+            ├── ControllerV2 → Controllers/V2/{Resource}Controller
+            └── ControllerV3 → Controllers/V3/{Resource}Controller
+```
+
+Do not mix versioned and unversioned routes without an explicit architectural reason.
+
+Do not introduce a new API versioning mechanism if one already exists.
+
+Do not version the Application layer (`Application.V1`) merely because the HTTP contract is versioned.
+
+---
+
+# Request and Response contracts
+
+HTTP contracts MUST use the contracts defined by `Application.Contracts`.
+
+Domain Entities MUST NOT be exposed directly through HTTP responses.
+
+Do not return Aggregate Roots, Entities, or Value Objects directly from Controllers unless an explicit existing contract requires it.
+
+Prefer dedicated Application Contracts for API-facing data.
+
+Do not duplicate Application Contracts in Presentation.
+
+---
+
+# Mapping
+
+Mapping between HTTP input/output and Application Contracts MUST remain simple.
+
+Controllers MAY perform trivial transport-level mapping when required.
+
+Controllers MUST NOT perform:
+
+- Business calculations.
+- Domain transformations.
+- Complex mapping logic.
+- Business rule evaluation.
+- Entity construction for business purposes.
+
+Complex or reusable mapping belongs outside the Controller according to the existing architecture.
+
+---
+
+# HTTP status codes
+
+Use HTTP status codes according to the semantics of the operation and the existing API response conventions.
+
+Expected defaults:
+
+200 OK
+201 Created
+202 Accepted
+204 No Content
+
+400 Bad Request
+401 Unauthorized
+403 Forbidden
+404 Not Found
+409 Conflict
+422 Unprocessable Content
+
+500 Internal Server Error
+
+Do not introduce inconsistent status-code conventions between Controllers.
+
+If the existing application Result/Error infrastructure defines the mapping, reuse it.
+
+---
+
+# Error handling
+
+Presentation MUST use the existing centralized error-handling mechanism.
+
+Controllers MUST NOT implement generic exception-to-response conversion.
+
+Incorrect:
+
+```csharp
+try
+{
+    ...
+}
+catch (Exception ex)
+{
+    return StatusCode(500, ...);
+}
+```
+
+when centralized exception handling already exists.
+
+Do not create a second error response format.
+
+Do not create Controller-specific error models.
+
+---
+
+# Authentication and Authorization
+
+Authentication and Authorization MUST remain separate concerns.
+
+Authentication determines who the caller is.
+
+Authorization determines whether the caller may perform an operation.
+
+Use the existing ASP.NET Core authentication and authorization infrastructure.
+
+Controllers MAY declare authorization requirements through existing policies/attributes.
+
+Controllers MUST NOT manually implement authentication logic.
+
+Controllers MUST NOT duplicate authorization logic that belongs to policies, handlers, or CQRS pipeline behavior.
+
+---
+
+# CancellationToken
+
+All asynchronous API operations MUST accept and propagate `CancellationToken`.
+
+Correct:
+
+```csharp
+public async Task<IActionResult> Create(
+    CreateProductCommand command,
+    CancellationToken cancellationToken)
+{
+    var result = await commandBus.SendAsync(command, cancellationToken);
+    ...
+}
+```
+
+Do not ignore or replace the request cancellation token.
+
+---
+
+# Async
+
+All I/O operations MUST use asynchronous APIs.
+
+Do not use:
+
+- `.Result`
+- `.Wait()`
+- `.GetAwaiter().GetResult()`
+
+Avoid synchronous blocking inside Controllers.
+
+---
+
+# Dependency Injection
+
+Controllers MUST use Dependency Injection.
+
+Do not instantiate application services, handlers, repositories, infrastructure services, or other dependencies manually.
+
+Avoid injecting dependencies that are not required by the Controller.
+
+Prefer the smallest possible dependency surface.
+
+---
+
+# Generic controllers
+
+Do NOT introduce generic CRUD controllers or generic Controller base classes merely to reduce duplication.
+
+Examples:
+
+- `BaseCrudController<T>`
+- `GenericController<T>`
+- `CrudController<T>`
+
+are forbidden unless an existing architectural convention explicitly requires them.
+
+Similar HTTP behavior does not automatically justify a generic abstraction.
+
+`MainController` is the version-agnostic HTTP response base. Version-specific bases (`ControllerV1`, `ControllerV2`, `ControllerV3`) pin API version and route prefix. Resource controllers inherit a version base. Do not add a generic CRUD base on top of this hierarchy.
+
+---
+
+# Cross-layer access
+
+Presentation MUST NOT directly access:
+
+- `DbContext`
+- Repository implementations
+- Database providers
+- Redis
+- Message brokers
+- External APIs
+- File systems
+- Infrastructure implementations
+- Domain internals
+
+The Controller communicates with the Application layer through the established Application Contracts and CQRS mechanism.
+
+---
+
+# Naming
+
+Preserve existing naming conventions.
+
+Use established terminology from the domain and Application layers.
+
+Do not rename existing concepts merely to conform to a generic REST convention.
+
+Resource names in routes should be consistent and resource-oriented.
+
+Controller names should represent the API resource/capability according to the existing project convention.
+
+Do not create names such as:
+
+`CreateProductController`
+`GetProductController`
+`DeleteProductController`
+
+unless explicitly required by the existing architecture.
+
+---
+
+# Organization
+
+The Presentation project/folder structure MUST reflect the existing solution architecture.
+
+Resource controllers live under a version folder:
+
+```text
+src/Api/Stora.Api/Controllers/V1/{Resource}Controller.cs
+```
+
+Do not introduce arbitrary folder structures merely because another project uses them.
+
+Every C# type MUST have its own `.cs` file.
+
+Do not create:
+
+- `Controllers.cs`
+- `Dtos.cs`
+- `Requests.cs`
+- `Responses.cs`
+- `Commands.cs`
+- `Queries.cs`
+
+containing unrelated types.
+
+One C# type per `.cs` file.
+
+Namespaces MUST match the established project/folder conventions.
+
+---
+
+# Documentation
+
+Public API endpoints should have meaningful OpenAPI/Swagger documentation according to the existing project convention.
+
+Documentation should describe:
+
+- What the endpoint does.
+- Its HTTP semantics.
+- Request/response behavior.
+- Relevant status codes.
+- Authorization requirements where applicable.
+
+Do not add documentation merely stating what the method name already says.
+
+Do not introduce a new API documentation mechanism when one already exists.
+
+---
+
+# Existing infrastructure first
+
+Before implementing any new Presentation infrastructure:
+
+1. Search the entire solution.
+2. Identify existing implementations.
+3. Reuse existing infrastructure where applicable.
+4. Extend existing infrastructure only when necessary.
+5. Introduce a new abstraction only when the existing architecture cannot satisfy the requirement.
+
+Never create a duplicate implementation of an existing cross-cutting concern.
+
+---
+
+# No over-engineering
+
+Do not introduce unnecessary:
+
+- Interfaces
+- Base classes
+- Factories
+- Strategies
+- Wrappers
+- Helpers
+- Filters
+- Middleware
+- Mappers
+- Generic abstractions
+- Frameworks
+
+Every new abstraction MUST have a concrete architectural or business justification.
+
+Do not create abstractions for hypothetical future requirements.
+
+---
+
+# No speculative behavior
+
+Do not invent:
+
+- Endpoints
+- Commands
+- Queries
+- Request fields
+- Response fields
+- Authorization policies
+- HTTP behaviors
+- Business actions
+
+unless they are supported by the existing Application/Domain model or explicitly requested.
+
+The Domain and Application layers are the source of truth for available business capabilities.
+
+---
+
+# Implementation protocol
+
+Before writing code:
+
+## 1. Discover
+
+Inspect:
+
+- Solution structure.
+- Presentation project.
+- `Application.Contracts`.
+- `Application`.
+- Domain.
+- Existing Commands.
+- Existing Queries.
+- Existing Handlers.
+- CQRS pipeline behaviors.
+- Result/Error infrastructure.
+- Authentication.
+- Authorization.
+- Middleware.
+- API versioning.
+- OpenAPI configuration.
+- Existing Controllers and endpoints.
+
+## 2. Analyze
+
+Identify:
+
+- Existing Application Contracts.
+- Commands.
+- Queries.
+- Handler inputs/outputs.
+- Validation behavior.
+- Authorization behavior.
+- Result types.
+- Error types.
+- Existing HTTP conventions.
+- Existing route conventions.
+
+## 3. Design
+
+Before implementation, produce the proposed:
+
+- Controllers.
+- Commands.
+- Queries.
+- Endpoints.
+- HTTP methods.
+- Routes.
+- Request/Response contracts.
+- Authorization requirements.
+- Status codes.
+- Application dependencies.
+
+Do not implement before the design is understood and internally consistent.
+
+## 4. Implement
+
+Implement only the approved/requested scope.
+
+Do not refactor unrelated code.
+
+Do not modify Domain or Application behavior merely to make the Controller implementation easier.
+
+## 5. Verify
+
+After implementation:
+
+1. Build the solution.
+2. Run relevant tests.
+3. Verify project dependencies.
+4. Verify CQRS separation.
+5. Verify REST semantics.
+6. Verify Application.Contracts usage.
+7. Verify no duplicated contracts exist.
+8. Verify no business logic exists in Controllers.
+9. Verify no cross-cutting logic was introduced into Presentation.
+10. Verify no unnecessary abstractions were introduced.
+
+The task is not complete until the implementation builds successfully and respects the architectural rules above.
