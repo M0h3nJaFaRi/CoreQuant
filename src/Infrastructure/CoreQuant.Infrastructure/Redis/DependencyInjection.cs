@@ -1,20 +1,17 @@
 using Common.Application.Caching;
 using Common.Application.Idempotency;
 using Common.Application.RateLimiting;
-using CoreQuant.Infrastructure.Redis.Caching;
+using CoreQuant.Infrastructure.Redis.Adapters.Caching;
+using CoreQuant.Infrastructure.Redis.Adapters.Idempotency;
+using CoreQuant.Infrastructure.Redis.Adapters.RateLimiting;
 using CoreQuant.Infrastructure.Redis.Configuration.Options;
 using CoreQuant.Infrastructure.Redis.Configuration.Validators;
-using CoreQuant.Infrastructure.Redis.Idempotency;
-using CoreQuant.Infrastructure.Redis.Messaging;
-using CoreQuant.Infrastructure.Redis.RateLimiting;
-using Framework.Messaging.Lease;
+using CoreQuant.Infrastructure.Redis.Core;
 using Framework.Serialization;
-using Framework.Time;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using StackExchange.Redis;
 
 namespace CoreQuant.Infrastructure.Redis;
 
@@ -24,50 +21,27 @@ namespace CoreQuant.Infrastructure.Redis;
 internal static class RedisServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers Redis multiplexer and distributed adapters.
+    /// Registers Redis core and distributed CQRS adapters.
     /// </summary>
-    internal static IServiceCollection AddCoreQuantRedis(
-        IServiceCollection services,
-        IConfiguration configuration,
-        string serviceName)
+    internal static IServiceCollection AddCoreQuantRedis(IServiceCollection services, IConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
-        ArgumentException.ThrowIfNullOrWhiteSpace(serviceName);
 
-        var redisOptionsBuilder = services.AddOptions<CoreQuantRedisOptions>()
-            .ValidateOnStart();
         services.TryAddSingleton<IValidateOptions<CoreQuantRedisOptions>, CoreQuantRedisOptionsValidator>();
-        redisOptionsBuilder.Bind(configuration.GetSection(CoreQuantRedisOptions.SectionName));
-
-        var namespaceOptionsBuilder = services.AddOptions<RedisKeyNamespaceOptions>()
-            .ValidateOnStart();
-        services.TryAddSingleton<IValidateOptions<RedisKeyNamespaceOptions>, RedisKeyNamespaceOptionsValidator>();
-        namespaceOptionsBuilder.Configure<CoreQuantRedisOptions>((namespaceOptions, redisOptions) =>
-        {
-            namespaceOptions.Service = serviceName.Trim();
-            namespaceOptions.Host = string.IsNullOrWhiteSpace(redisOptions.HostIdentity)
-                ? Environment.MachineName
-                : redisOptions.HostIdentity.Trim();
-        });
-
-        services.TryAddSingleton<IConnectionMultiplexer>(sp =>
-        {
-            var options = sp.GetRequiredService<IOptionsMonitor<CoreQuantRedisOptions>>().CurrentValue;
-            return ConnectionMultiplexer.Connect(options.ToConfigurationOptions());
-        });
+        
+        services.AddOptions<CoreQuantRedisOptions>().Bind(configuration.GetSection(CoreQuantRedisOptions.SectionName)).ValidateOnStart();
 
         services.AddFrameworkSerialization();
+        services.AddSingleton<IRedisCore, RedisCore>();
 
         services.RemoveAll<IRequestCache>();
         services.RemoveAll<IIdempotencyStore>();
         services.RemoveAll<IRateLimiter>();
-        services.RemoveAll<IWorkLease>();
 
         services.AddSingleton<IRequestCache, RedisRequestCache>();
         services.AddSingleton<IIdempotencyStore, RedisIdempotencyStore>();
         services.AddSingleton<IRateLimiter, RedisRateLimiter>();
-        services.AddSingleton<IWorkLease, RedisWorkLease>();
 
         return services;
     }

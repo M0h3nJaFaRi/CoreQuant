@@ -14,4 +14,9 @@ public interface IRequestCache
     /// Stores a value with the given absolute duration.
     /// </summary>
     Task SetAsync<T>(string key, T value, TimeSpan duration, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes <paramref name="key"/> when present.
+    /// </summary>
+    Task<bool> DeleteAsync(string key, CancellationToken cancellationToken = default);
 }

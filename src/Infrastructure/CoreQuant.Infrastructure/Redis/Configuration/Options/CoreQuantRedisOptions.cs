@@ -6,7 +6,7 @@ namespace CoreQuant.Infrastructure.Redis.Configuration.Options;
 /// Connection settings for the shared Redis multiplexer.
 /// Bound from <c>Infrastructure:Redis</c>.
 /// </summary>
-public sealed class CoreQuantRedisOptions
+public sealed record CoreQuantRedisOptions
 {
     /// <summary>
     /// Configuration section name.
@@ -16,32 +16,47 @@ public sealed class CoreQuantRedisOptions
     /// <summary>
     /// Redis server host.
     /// </summary>
-    public string Host { get; set; } = "127.0.0.1";
+    public string Host { get; init; } = default!;
 
     /// <summary>
     /// Redis server port.
     /// </summary>
-    public int Port { get; set; } = 6379;
+    public int Port { get; init; }
 
     /// <summary>
     /// Optional Redis password.
     /// </summary>
-    public string Password { get; set; } = string.Empty;
+    public string Password { get; init; } = default!;
 
     /// <summary>
-    /// Host/pod identity segment for Redis key prefixes ({Service}:{Host}:...).
+    /// Host role segment for Redis key prefixes (Api, Worker, Scheduler, Consumer, ...).
     /// </summary>
-    public string HostIdentity { get; set; } = Environment.MachineName;
+    public string HostRole { get; init; } = default!;
 
     /// <summary>
     /// When true, fails fast if Redis is unavailable at connect time.
     /// </summary>
-    public bool AbortOnConnectFail { get; set; }
+    public bool AbortOnConnectFail { get; init; }
 
     /// <summary>
     /// Connection timeouts and retry settings.
     /// </summary>
-    public RedisConnectionOptions Connection { get; set; } = new();
+    public RedisConnectionOptions Connection { get; init; } = new();
+
+    /// <summary>
+    /// CQRS cache database settings.
+    /// </summary>
+    public RedisCacheOptions Cache { get; init; } = new();
+
+    /// <summary>
+    /// CQRS idempotency database settings.
+    /// </summary>
+    public RedisIdempotencyOptions Idempotency { get; init; } = new();
+
+    /// <summary>
+    /// CQRS rate-limit database settings.
+    /// </summary>
+    public RedisRateLimitOptions RateLimit { get; init; } = new();
 
     /// <summary>
     /// Builds StackExchange.Redis <see cref="ConfigurationOptions"/> from these fields.
