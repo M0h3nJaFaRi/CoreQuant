@@ -1,4 +1,5 @@
 using Common.Api;
+using CoreQuant.Infrastructure;
 using CoreQuant.Infrastructure.Acl;
 using CoreQuant.Infrastructure.Persistence.EF;
 
@@ -11,6 +12,7 @@ builder.Services.AddCommonApi(
     builder.Configuration,
     typeof(CoreQuant.Application.AssemblyMarker).Assembly);
 
+builder.Services.AddCoreQuantInfrastructure(builder.Configuration);
 builder.Services.AddCoreQuantAcl(builder.Configuration);
 builder.Services.AddCoreQuantPersistenceEfMySql(builder.Configuration);
 

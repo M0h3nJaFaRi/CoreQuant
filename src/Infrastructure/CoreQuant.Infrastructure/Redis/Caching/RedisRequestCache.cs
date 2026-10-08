@@ -1,38 +1,39 @@
-using Common.Application.Idempotency;
-using Common.Infrastructure.Configuration.Options;
+using Common.Application.Caching;
+using CoreQuant.Infrastructure.Redis.Configuration.Options;
+using CoreQuant.Infrastructure.Redis.KeyPrefix;
 using Framework.Serialization.Json;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
-namespace Common.Infrastructure.Idempotency;
+namespace CoreQuant.Infrastructure.Redis.Caching;
 
 /// <summary>
-/// Redis-backed distributed <see cref="IIdempotencyStore"/> for multi-pod deployments.
+/// Redis-backed distributed <see cref="IRequestCache"/> for multi-pod deployments.
 /// </summary>
-internal sealed class RedisIdempotencyStore : IIdempotencyStore
+internal sealed class RedisRequestCache : IRequestCache
 {
     private readonly IConnectionMultiplexer _multiplexer;
     private readonly IJsonSerializer _serializer;
     private readonly string _keyPrefix;
 
-    public RedisIdempotencyStore(
+    public RedisRequestCache(
         IConnectionMultiplexer multiplexer,
         IJsonSerializer serializer,
-        IOptions<RedisIdempotencyStoreOptions> options)
+        IOptions<RedisKeyNamespaceOptions> namespaceOptions)
     {
         ArgumentNullException.ThrowIfNull(multiplexer);
         ArgumentNullException.ThrowIfNull(serializer);
-        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(namespaceOptions);
 
         _multiplexer = multiplexer;
         _serializer = serializer;
-        var prefix = options.Value.KeyPrefix;
-        ArgumentException.ThrowIfNullOrWhiteSpace(prefix);
-        _keyPrefix = prefix.EndsWith(':') ? prefix : prefix + ":";
+        _keyPrefix = RedisKeyPrefixBuilder.BuildFeaturePrefix(
+            namespaceOptions.Value,
+            RedisKeyPrefixBuilder.CacheFeature);
     }
 
     /// <inheritdoc />
-    public async Task<(bool Found, TResponse? Response)> TryGetAsync<TResponse>(
+    public async Task<(bool Hit, T? Value)> TryGetAsync<T>(
         string key,
         CancellationToken cancellationToken = default)
     {
@@ -48,27 +49,27 @@ internal sealed class RedisIdempotencyStore : IIdempotencyStore
             return (false, default);
         }
 
-        return (true, _serializer.Deserialize<TResponse>((string)value!));
+        return (true, _serializer.Deserialize<T>((string)value!));
     }
 
     /// <inheritdoc />
-    public async Task SetAsync<TResponse>(
+    public async Task SetAsync<T>(
         string key,
-        TResponse response,
-        TimeSpan ttl,
+        T value,
+        TimeSpan duration,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
-        if (ttl <= TimeSpan.Zero)
+        if (duration <= TimeSpan.Zero)
         {
-            throw new ArgumentOutOfRangeException(nameof(ttl), ttl, "TTL must be positive.");
+            throw new ArgumentOutOfRangeException(nameof(duration), duration, "Duration must be positive.");
         }
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        var payload = _serializer.Serialize(response);
+        var payload = _serializer.Serialize(value);
         await _multiplexer.GetDatabase()
-            .StringSetAsync(BuildKey(key), payload, ttl)
+            .StringSetAsync(BuildKey(key), payload, duration)
             .ConfigureAwait(false);
     }
 

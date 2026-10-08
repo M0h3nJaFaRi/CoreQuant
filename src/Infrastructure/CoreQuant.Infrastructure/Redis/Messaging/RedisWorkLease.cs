@@ -1,17 +1,36 @@
+using Framework.Messaging.Lease;
 using Framework.Time;
+using CoreQuant.Infrastructure.Redis.Configuration.Options;
+using CoreQuant.Infrastructure.Redis.KeyPrefix;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 
-namespace Framework.Messaging.Lease;
+namespace CoreQuant.Infrastructure.Redis.Messaging;
 
 /// <summary>
 /// Redis-backed <see cref="IWorkLease"/> using SET NX + PX.
 /// </summary>
-internal sealed class RedisWorkLease(
-    IConnectionMultiplexer multiplexer,
-    ISystemClock clock,
-    string keyPrefix = "framework:lease:") : IWorkLease
+internal sealed class RedisWorkLease : IWorkLease
 {
-    private readonly string _keyPrefix = keyPrefix.EndsWith(':') ? keyPrefix : keyPrefix + ":";
+    private readonly IConnectionMultiplexer _multiplexer;
+    private readonly ISystemClock _clock;
+    private readonly string _keyPrefix;
+
+    public RedisWorkLease(
+        IConnectionMultiplexer multiplexer,
+        ISystemClock clock,
+        IOptions<RedisKeyNamespaceOptions> namespaceOptions)
+    {
+        ArgumentNullException.ThrowIfNull(multiplexer);
+        ArgumentNullException.ThrowIfNull(clock);
+        ArgumentNullException.ThrowIfNull(namespaceOptions);
+
+        _multiplexer = multiplexer;
+        _clock = clock;
+        _keyPrefix = RedisKeyPrefixBuilder.BuildFeaturePrefix(
+            namespaceOptions.Value,
+            RedisKeyPrefixBuilder.LeaseFeature);
+    }
 
     /// <inheritdoc />
     public async Task<IWorkLeaseHandle?> TryAcquireAsync(
@@ -21,13 +40,15 @@ internal sealed class RedisWorkLease(
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(resourceKey);
         if (leaseDuration <= TimeSpan.Zero)
+        {
             throw new ArgumentOutOfRangeException(nameof(leaseDuration), leaseDuration, "Lease duration must be positive.");
+        }
 
         cancellationToken.ThrowIfCancellationRequested();
 
         var token = Guid.NewGuid().ToString("N");
         var redisKey = _keyPrefix + resourceKey;
-        var db = multiplexer.GetDatabase();
+        var db = _multiplexer.GetDatabase();
         var acquired = await db.StringSetAsync(
                 redisKey,
                 token,
@@ -36,9 +57,11 @@ internal sealed class RedisWorkLease(
             .ConfigureAwait(false);
 
         if (!acquired)
+        {
             return null;
+        }
 
-        return new Handle(db, redisKey, resourceKey, token, clock.UtcNow.Add(leaseDuration));
+        return new Handle(db, redisKey, resourceKey, token, _clock.UtcNow.Add(leaseDuration));
     }
 
     private sealed class Handle(
@@ -66,7 +89,9 @@ internal sealed class RedisWorkLease(
         public async ValueTask DisposeAsync()
         {
             if (Interlocked.Exchange(ref _disposed, 1) != 0)
+            {
                 return;
+            }
 
             await database.ScriptEvaluateAsync(
                     ReleaseScript,

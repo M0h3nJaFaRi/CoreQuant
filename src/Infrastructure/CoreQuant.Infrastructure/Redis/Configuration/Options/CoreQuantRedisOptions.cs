@@ -1,12 +1,12 @@
 using StackExchange.Redis;
 
-namespace Framework.Infrastructure.Configuration.Options;
+namespace CoreQuant.Infrastructure.Redis.Configuration.Options;
 
 /// <summary>
 /// Connection settings for the shared Redis multiplexer.
 /// Bound from <c>Infrastructure:Redis</c>.
 /// </summary>
-public sealed class FrameworkRedisOptions
+public sealed class CoreQuantRedisOptions
 {
     /// <summary>
     /// Configuration section name.
@@ -29,9 +29,9 @@ public sealed class FrameworkRedisOptions
     public string Password { get; set; } = string.Empty;
 
     /// <summary>
-    /// Optional key prefix for Framework-owned Redis keys.
+    /// Host/pod identity segment for Redis key prefixes ({Service}:{Host}:...).
     /// </summary>
-    public string KeyPrefix { get; set; } = "framework";
+    public string HostIdentity { get; set; } = Environment.MachineName;
 
     /// <summary>
     /// When true, fails fast if Redis is unavailable at connect time.

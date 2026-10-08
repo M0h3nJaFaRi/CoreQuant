@@ -1,5 +1,4 @@
 ﻿using Common.Api.Swagger;
-using Common.Infrastructure;
 using Framework.Web;
 using System.Reflection;
 using Framework.Security;
@@ -20,8 +19,9 @@ namespace Common.Api;
 public static class DependencyInjection
 {
     /// <summary>
-    /// Registers observability, Serilog/syslog logging, security, CQRS buses/behaviors, Redis cache/idempotency,
-    /// and FluentValidation for the given application assemblies. Persistence is registered by the service host.
+    /// Registers observability, Serilog/syslog logging, security, CQRS buses/behaviors,
+    /// and FluentValidation for the given application assemblies.
+    /// Product infrastructure (Redis, persistence) is registered by the service host.
     /// </summary>
     /// <param name="serviceName">Fallback service name when <c>ApplicationName</c> is not configured.</param>
     public static IServiceCollection AddCommonApi(
@@ -41,7 +41,6 @@ public static class DependencyInjection
         services.AddFrameworkLogging(configuration);
         services.AddFrameworkSecurity(configuration);
         services.AddCommonApplication(applicationAssemblies);
-        services.AddCommonInfrastructureWithRedis(configuration);
 
         if (applicationAssemblies is { Length: > 0 })
             services.AddFrameworkValidation(applicationAssemblies);

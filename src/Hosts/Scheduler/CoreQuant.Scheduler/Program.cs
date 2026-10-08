@@ -1,4 +1,5 @@
 using Common.Scheduler;
+using CoreQuant.Infrastructure;
 using CoreQuant.Infrastructure.Persistence.EF;
 using CoreQuant.Scheduler;
 
@@ -9,6 +10,7 @@ builder.Services.AddCommonScheduler(
     builder.Configuration,
     typeof(CoreQuant.Application.AssemblyMarker).Assembly);
 
+builder.Services.AddCoreQuantInfrastructure(builder.Configuration);
 builder.Services.AddCoreQuantPersistenceEfMySql(builder.Configuration);
 builder.Services.AddHostedService<OutboxRetrySchedulerHostedService>();
 

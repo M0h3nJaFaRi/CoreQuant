@@ -1,6 +1,6 @@
 namespace CoreQuant.Infrastructure;
 
 /// <summary>
-/// Marker type used for assembly discovery and registration.
+/// Assembly marker for CoreQuant infrastructure registration and scanning.
 /// </summary>
-public sealed class AssemblyMarker;
+public static class AssemblyMarker;

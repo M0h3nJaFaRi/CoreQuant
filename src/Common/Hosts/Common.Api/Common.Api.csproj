@@ -19,7 +19,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Common.Application\Common.Application.csproj" />
     <ProjectReference Include="..\..\Common.Framework\Common.Framework.csproj" />
-    <ProjectReference Include="..\..\Infrastructure\Common.Infrastructure\Common.Infrastructure.csproj" />
     <ProjectReference Include="..\..\..\Framework\CoreQuant.Framework\CoreQuant.Framework.csproj" />
   </ItemGroup>
 

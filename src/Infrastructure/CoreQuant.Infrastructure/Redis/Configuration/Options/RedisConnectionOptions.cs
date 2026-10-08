@@ -1,4 +1,4 @@
-namespace Framework.Infrastructure.Configuration.Options;
+namespace CoreQuant.Infrastructure.Redis.Configuration.Options;
 
 /// <summary>
 /// StackExchange.Redis connection timeouts and retry settings.

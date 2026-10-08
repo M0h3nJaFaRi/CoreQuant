@@ -7,10 +7,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Application\CoreQuant.Application\CoreQuant.Application.csproj" />
-    <ProjectReference Include="..\..\Domain\CoreQuant.Domain\CoreQuant.Domain.csproj" />
-    <ProjectReference Include="..\..\Common\Common.Framework\Common.Framework.csproj" />
-    <ProjectReference Include="..\..\Common\Infrastructure\Common.Infrastructure\Common.Infrastructure.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
+    <PackageReference Include="StackExchange.Redis" Version="2.8.41" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Common.Application\Common.Application.csproj" />
+    <ProjectReference Include="..\..\Framework\CoreQuant.Framework\CoreQuant.Framework.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="CoreQuant.Infrastructure.UnitTests" />
   </ItemGroup>
 
 </Project>
