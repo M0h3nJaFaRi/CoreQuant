@@ -7,7 +7,6 @@ using CoreQuant.Infrastructure.Redis.Adapters.RateLimiting;
 using CoreQuant.Infrastructure.Redis.Configuration.Options;
 using CoreQuant.Infrastructure.Redis.Configuration.Validators;
 using CoreQuant.Infrastructure.Redis.Core;
-using Framework.Serialization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -32,16 +31,15 @@ internal static class RedisServiceCollectionExtensions
         
         services.AddOptions<CoreQuantRedisOptions>().Bind(configuration.GetSection(CoreQuantRedisOptions.SectionName)).ValidateOnStart();
 
-        services.AddFrameworkSerialization();
         services.AddSingleton<IRedisCore, RedisCore>();
 
         services.RemoveAll<IRequestCache>();
         services.RemoveAll<IIdempotencyStore>();
-        services.RemoveAll<IRateLimiter>();
+        services.RemoveAll<IRedisRateLimiter>();
 
         services.AddSingleton<IRequestCache, RedisRequestCache>();
         services.AddSingleton<IIdempotencyStore, RedisIdempotencyStore>();
-        services.AddSingleton<IRateLimiter, RedisRateLimiter>();
+        services.AddSingleton<IRedisRateLimiter, RedisRateLimiter>();
 
         return services;
     }

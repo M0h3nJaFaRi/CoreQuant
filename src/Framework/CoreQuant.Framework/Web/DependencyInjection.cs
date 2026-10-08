@@ -9,7 +9,7 @@ namespace Framework.Web;
 public static class DependencyInjection
 {
     /// <summary>
-    /// Adds correlation id and HTTP metrics middleware. Requires <c>AddFrameworkObservability</c> for <see cref="System.Diagnostics.Metrics.Meter"/>.
+    /// Adds correlation id and HTTP metrics middleware. Requires <c>AddFramework</c> for <see cref="System.Diagnostics.Metrics.Meter"/>.
     /// </summary>
     public static IApplicationBuilder UseFrameworkWeb(this IApplicationBuilder app)
     {

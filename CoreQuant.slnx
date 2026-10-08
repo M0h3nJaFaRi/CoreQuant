@@ -161,15 +161,7 @@
   </Folder>
   <Folder Name="/tests/UnitTests/" />
   <Folder Name="/tests/UnitTests/Framework/">
-    <Project Path="tests/UnitTests/Framework.Infrastructure.UnitTests/Framework.Infrastructure.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/Framework.Messaging.UnitTests/Framework.Messaging.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/Framework.Observability.UnitTests/Framework.Observability.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/Framework.Resilience.UnitTests/Framework.Resilience.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/Framework.Security.UnitTests/Framework.Security.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/Framework.Serialization.UnitTests/Framework.Serialization.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/Framework.UnitTests/Framework.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/Framework.Validation.UnitTests/Framework.Validation.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/Framework.Web.UnitTests/Framework.Web.UnitTests.csproj" />
+    <Project Path="tests/UnitTests/CoreQuant.Framework.UnitTests/CoreQuant.Framework.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tests/UnitTests/Hosts/">
     <Project Path="tests/UnitTests/CoreQuant.Api.UnitTests/CoreQuant.Api.UnitTests.csproj" />

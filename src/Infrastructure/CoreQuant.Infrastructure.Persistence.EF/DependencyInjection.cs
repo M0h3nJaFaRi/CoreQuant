@@ -2,10 +2,6 @@ using Common.Application.Configuration.Options;
 using Common.Application.Configuration.Validators;
 using Common.Application.Outbox;
 using Common.Application.Persistence;
-using Framework.Infrastructure;
-using Framework.Messaging;
-using Framework.Observability;
-using Framework.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -29,11 +25,6 @@ public static class DependencyInjection
     public static IServiceCollection AddCoreQuantPersistenceEf(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
-
-        services.AddFrameworkInfrastructure();
-        services.AddFrameworkObservability();
-        services.AddFrameworkSerialization();
-        services.AddFrameworkMessaging();
 
         services.AddOptions<OutboxOptions>()
             .ValidateOnStart();

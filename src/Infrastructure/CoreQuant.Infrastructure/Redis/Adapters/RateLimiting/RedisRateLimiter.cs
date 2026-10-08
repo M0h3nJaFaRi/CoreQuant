@@ -9,7 +9,7 @@ namespace CoreQuant.Infrastructure.Redis.Adapters.RateLimiting;
 /// <summary>
 /// Redis-backed sliding-window rate limiter for multi-pod deployments.
 /// </summary>
-internal sealed class RedisRateLimiter(IRedisCore redis, IOptions<CoreQuantRedisOptions> options) : IRateLimiter
+internal sealed class RedisRateLimiter(IRedisCore redis, IOptions<CoreQuantRedisOptions> options) : IRedisRateLimiter
 {
     private readonly uint _database = options.Value.RateLimit.Database;
 

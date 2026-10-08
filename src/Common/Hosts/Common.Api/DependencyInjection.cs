@@ -1,10 +1,7 @@
 ﻿using Common.Api.Swagger;
 using Framework.Web;
 using System.Reflection;
-using Framework.Security;
 using Common.Application;
-using Framework.Validation;
-using Framework.Observability;
 using Microsoft.AspNetCore.Builder;
 using Asp.Versioning;
 using Asp.Versioning.ApiExplorer;
@@ -36,14 +33,7 @@ public static class DependencyInjection
 
         var applicationName = ResolveApplicationName(configuration, serviceName);
 
-        services.AddFrameworkObservability(options => options.ServiceName = applicationName);
-        services.AddFrameworkWebObservability(configuration, applicationName);
-        services.AddFrameworkLogging(configuration);
-        services.AddFrameworkSecurity(configuration);
         services.AddCommonApplication(applicationAssemblies);
-
-        if (applicationAssemblies is { Length: > 0 })
-            services.AddFrameworkValidation(applicationAssemblies);
 
         services.AddApiVersioning(options =>
             {

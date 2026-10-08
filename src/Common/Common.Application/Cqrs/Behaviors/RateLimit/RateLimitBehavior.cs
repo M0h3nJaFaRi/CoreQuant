@@ -13,7 +13,7 @@ namespace Common.Application.Cqrs.Behaviors.RateLimit;
 /// </summary>
 internal sealed class RateLimitBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
 {
-    private readonly IRateLimiter _rateLimiter;
+    private readonly IRedisRateLimiter _rateLimiter;
     private readonly ICurrentUserAccessor _currentUser;
     private readonly RateLimitBehaviorOptions _options;
 
@@ -21,7 +21,7 @@ internal sealed class RateLimitBehavior<TRequest, TResponse> : IPipelineBehavior
     /// Creates the behavior.
     /// </summary>
     public RateLimitBehavior(
-        IRateLimiter rateLimiter,
+        IRedisRateLimiter rateLimiter,
         ICurrentUserAccessor currentUser,
         IOptions<RateLimitBehaviorOptions> options)
     {
@@ -78,16 +78,16 @@ internal sealed class RateLimitBehavior<TRequest, TResponse> : IPipelineBehavior
         return $"{userId}:{requestType}";
     }
 
-    private int ResolvePermitLimit(TRequest request)
+    private uint ResolvePermitLimit(TRequest request)
     {
         if (request is IRateLimitedRequest rateLimited
             && rateLimited.PermitLimit.HasValue
             && rateLimited.PermitLimit.Value > 0)
         {
-            return rateLimited.PermitLimit.Value;
+            return (uint)rateLimited.PermitLimit.Value;
         }
 
-        return _options.DefaultPermitLimit;
+        return (uint)_options.DefaultPermitLimit;
     }
 
     private TimeSpan ResolveWindow(TRequest request)

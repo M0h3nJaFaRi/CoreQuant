@@ -63,14 +63,13 @@ public static class DependencyInjection
 
         services.TryAddSingleton<IAuthorizationService, AllowAllAuthorizationService>();
         services.TryAddSingleton<ICurrentUserAccessor, NullCurrentUserAccessor>();
-        // IRequestCache / IIdempotencyStore / IRateLimiter: Redis via CoreQuant.Infrastructure.AddCoreQuantInfrastructure.
-        services.TryAddSingleton<IRateLimiter, InMemoryRateLimiter>();
+        // IRequestCache / IIdempotencyStore / IRedisRateLimiter: Redis via CoreQuant.Infrastructure.AddCoreQuantInfrastructure.
         services.TryAddSingleton<IOutboxWriter, NullOutboxWriter>();
         services.TryAddSingleton<IOutboxPublisher, NullOutboxPublisher>();
         services.TryAddScoped<IOutboxPendingBuffer, OutboxPendingBuffer>();
         services.TryAddSingleton<IOutboxCompletionService, NullOutboxCompletionService>();
         services.TryAddSingleton<IOutboxRetryJob, NullOutboxRetryJob>();
-        // Meter comes from Framework.Observability.AddFrameworkObservability — do not create a second Meter.
+        // Meter comes from Framework.AddFramework — do not create a second Meter.
         services.TryAddSingleton<CqrsMetrics>();
 
         services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>)));

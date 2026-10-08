@@ -2,7 +2,6 @@ using Framework.Observability.Configuration.Options;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
@@ -14,27 +13,6 @@ namespace Framework.Web;
 /// </summary>
 public static class WebObservabilityExtensions
 {
-    /// <summary>
-    /// Binds <see cref="FrameworkHealthOptions"/> and <see cref="FrameworkMetricsOptions"/> from configuration.
-    /// </summary>
-    public static IServiceCollection AddFrameworkWebObservability(
-        this IServiceCollection services,
-        IConfiguration configuration,
-        string applicationName)
-    {
-        ArgumentNullException.ThrowIfNull(services);
-        ArgumentNullException.ThrowIfNull(configuration);
-        ArgumentException.ThrowIfNullOrWhiteSpace(applicationName);
-
-        services.AddOptions<FrameworkHealthOptions>()
-            .Bind(configuration.GetSection(FrameworkHealthOptions.SectionName));
-
-        services.AddOptions<FrameworkMetricsOptions>()
-            .Bind(configuration.GetSection(FrameworkMetricsOptions.SectionName));
-
-        return services;
-    }
-
     /// <summary>
     /// Maps liveness/readiness health checks and the optional metrics endpoint.
     /// </summary>

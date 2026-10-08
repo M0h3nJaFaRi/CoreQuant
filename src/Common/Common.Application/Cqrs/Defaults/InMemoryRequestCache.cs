@@ -30,5 +30,12 @@ internal sealed class InMemoryRequestCache : IRequestCache
         return Task.CompletedTask;
     }
 
+    /// <inheritdoc />
+    public Task<bool> DeleteAsync(string key, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(_entries.TryRemove(key, out _));
+    }
+
     private sealed record CacheEntry(object Value, DateTimeOffset ExpiresAtUtc);
 }
