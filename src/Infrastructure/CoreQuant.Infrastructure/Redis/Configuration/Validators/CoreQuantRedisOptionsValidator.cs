@@ -48,6 +48,12 @@ internal sealed class CoreQuantRedisOptionsValidator : IValidateOptions<CoreQuan
         if (options.Queue.MaxStreamLength < 0)
             failures.Add($"{CoreQuantRedisOptions.SectionName}:Queue:MaxStreamLength must be zero or greater.");
 
+        if (options.Health.Timeout <= TimeSpan.Zero)
+            failures.Add($"{CoreQuantRedisOptions.SectionName}:Health:Timeout must be greater than zero.");
+
+        if (options.Health.PingDatabase is { } pingDb)
+            ValidateDatabase(failures, $"{CoreQuantRedisOptions.SectionName}:Health:PingDatabase", pingDb);
+
         return failures.Count > 0 ? ValidateOptionsResult.Fail(failures) : ValidateOptionsResult.Success;
     }
 

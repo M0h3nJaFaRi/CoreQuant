@@ -1,21 +1,38 @@
 using System.Dynamic;
-using CoreQuant.Infrastructure.Redis.Configuration.Options;
-using CoreQuant.Infrastructure.Redis.Core.Contract;
-using CoreQuant.Infrastructure.Redis.Core.Scripts;
-using Framework.Serialization.Json;
-using Microsoft.Extensions.Options;
 using StackExchange.Redis;
+using Microsoft.Extensions.Options;
+using Framework.Serialization.Json;
+using CoreQuant.Infrastructure.Redis.Core.Scripts;
+using CoreQuant.Infrastructure.Redis.Core.Contract;
+using CoreQuant.Infrastructure.Redis.Observability;
+using CoreQuant.Infrastructure.Redis.Configuration.Options;
 
 namespace CoreQuant.Infrastructure.Redis.Core;
 
 /// <summary>
 /// Default Redis core that owns the connection multiplexer and key prefixing.
 /// </summary>
-internal sealed class RedisCore(IOptionsMonitor<CoreQuantRedisOptions> options, IJsonSerializer serializer) : IRedisCore, IAsyncDisposable
+internal sealed class RedisCore : IRedisCore, IAsyncDisposable
 {
+    private readonly string _keyPrefix;
     private const string StreamPayloadField = "json";
-    private readonly string _keyPrefix = $"CoreQuant:{options.CurrentValue.HostRole.Trim()}";
-    private readonly IConnectionMultiplexer _multiplexer = ConnectionMultiplexer.Connect(options.CurrentValue.ToConfigurationOptions());
+    private readonly IJsonSerializer _serializer;
+    private readonly IConnectionMultiplexer _multiplexer;
+
+    public RedisCore(IOptionsMonitor<CoreQuantRedisOptions> options, IJsonSerializer serializer, RedisMetrics metrics)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+        ArgumentNullException.ThrowIfNull(serializer);
+        ArgumentNullException.ThrowIfNull(metrics);
+
+        _serializer = serializer;
+        var current = options.CurrentValue;
+        _keyPrefix = $"CoreQuant:{current.HostRole.Trim()}";
+        _multiplexer = ConnectionMultiplexer.Connect(current.ToConfigurationOptions());
+
+        _multiplexer.ConnectionFailed += (_, args) => metrics.RecordConnectionFailed(args.EndPoint?.ToString());
+        _multiplexer.ConnectionRestored += (_, args) => metrics.RecordConnectionRestored(args.EndPoint?.ToString());
+    }
 
     /// <inheritdoc />
     public async Task<(bool Found, T? Value)> GetAsync<T>(uint dbIndex, string key, CancellationToken cancellationToken = default)
@@ -26,9 +43,7 @@ internal sealed class RedisCore(IOptionsMonitor<CoreQuantRedisOptions> options, 
         var value = await GetDatabase(dbIndex).StringGetAsync(ApplyPrefix(key)).ConfigureAwait(false);
 
         if (value.IsNullOrEmpty)
-        {
             return (false, default);
-        }
 
         return (true, DeserializeValue<T>((string)value!));
     }
@@ -37,59 +52,47 @@ internal sealed class RedisCore(IOptionsMonitor<CoreQuantRedisOptions> options, 
     public async Task SetAsync<T>(uint dbIndex, string key, T value, TimeSpan expiry, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
+
         if (expiry <= TimeSpan.Zero)
-        {
             throw new ArgumentOutOfRangeException(nameof(expiry), expiry, "Expiry must be positive.");
-        }
 
         cancellationToken.ThrowIfCancellationRequested();
 
         var payload = SerializeValue(value);
-        await GetDatabase(dbIndex)
-            .StringSetAsync(ApplyPrefix(key), payload, expiry)
-            .ConfigureAwait(false);
+
+        await GetDatabase(dbIndex).StringSetAsync(ApplyPrefix(key), payload, expiry).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<bool> SetIfNotExistsAsync<T>(uint dbIndex, string key, T value, TimeSpan expiry, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
+
         if (expiry <= TimeSpan.Zero)
-        {
             throw new ArgumentOutOfRangeException(nameof(expiry), expiry, "Expiry must be positive.");
-        }
 
         cancellationToken.ThrowIfCancellationRequested();
 
         var payload = SerializeValue(value);
-        return await GetDatabase(dbIndex)
-            .StringSetAsync(ApplyPrefix(key), payload, expiry, When.NotExists)
-            .ConfigureAwait(false);
+        return await GetDatabase(dbIndex).StringSetAsync(ApplyPrefix(key), payload, expiry, When.NotExists).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
     public async Task<(bool Removed, T? Value)> TryRemoveAsync<T>(uint dbIndex, string key, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
+
         cancellationToken.ThrowIfCancellationRequested();
 
-        var result = await ExecuteScriptAsync(
-                dbIndex,
-                RedisScripts.GetDelString,
-                new Dictionary<string, object?> { ["key"] = key },
-                cancellationToken)
-            .ConfigureAwait(false);
+        var result = await ExecuteScriptAsync(dbIndex, RedisScripts.GetDelString, new Dictionary<string, object?> { ["key"] = key }, cancellationToken).ConfigureAwait(false);
 
         if (result.IsNull)
-        {
             return (false, default);
-        }
 
         var raw = result.AsString();
+
         if (string.IsNullOrWhiteSpace(raw))
-        {
             return (false, default);
-        }
 
         return (true, DeserializeValue<T>(raw));
     }
@@ -100,9 +103,7 @@ internal sealed class RedisCore(IOptionsMonitor<CoreQuantRedisOptions> options, 
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         cancellationToken.ThrowIfCancellationRequested();
 
-        return await GetDatabase(dbIndex)
-            .KeyDeleteAsync(ApplyPrefix(key))
-            .ConfigureAwait(false);
+        return await GetDatabase(dbIndex).KeyDeleteAsync(ApplyPrefix(key)).ConfigureAwait(false);
     }
 
     /// <inheritdoc />
@@ -112,9 +113,7 @@ internal sealed class RedisCore(IOptionsMonitor<CoreQuantRedisOptions> options, 
         ArgumentNullException.ThrowIfNull(parameters);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var result = await GetDatabase(dbIndex)
-            .ScriptEvaluateAsync(script.Inner, ToScriptParameters(parameters))
-            .ConfigureAwait(false);
+        var result = await GetDatabase(dbIndex).ScriptEvaluateAsync(script.Inner, ToScriptParameters(parameters)).ConfigureAwait(false);
 
         return RedisScriptResult.From(result);
     }
@@ -124,7 +123,7 @@ internal sealed class RedisCore(IOptionsMonitor<CoreQuantRedisOptions> options, 
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var entries = new[] { new NameValueEntry(StreamPayloadField, serializer.Serialize(payload)) };
+        var entries = new[] { new NameValueEntry(StreamPayloadField, _serializer.Serialize(payload)) };
         var prefixedStream = ApplyPrefix(streamKey);
         var db = GetDatabase(dbIndex);
 
@@ -159,7 +158,7 @@ internal sealed class RedisCore(IOptionsMonitor<CoreQuantRedisOptions> options, 
         ArgumentException.ThrowIfNullOrWhiteSpace(streamKey);
         ArgumentException.ThrowIfNullOrWhiteSpace(consumerGroup);
         ArgumentException.ThrowIfNullOrWhiteSpace(consumerName);
-        
+
         if (count <= 0)
             throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be greater than zero.");
 
@@ -179,7 +178,7 @@ internal sealed class RedisCore(IOptionsMonitor<CoreQuantRedisOptions> options, 
                 continue;
             }
 
-            var payload = serializer.Deserialize<T>(json);
+            var payload = _serializer.Deserialize<T>(json);
             if (payload is null)
             {
                 continue;
@@ -209,6 +208,13 @@ internal sealed class RedisCore(IOptionsMonitor<CoreQuantRedisOptions> options, 
     }
 
     /// <inheritdoc />
+    public async Task PingAsync(uint dbIndex, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        await GetDatabase(dbIndex).PingAsync().ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
         await _multiplexer.DisposeAsync().ConfigureAwait(false);
@@ -224,7 +230,7 @@ internal sealed class RedisCore(IOptionsMonitor<CoreQuantRedisOptions> options, 
             return lockOwner.Token;
         }
 
-        return serializer.Serialize(value);
+        return _serializer.Serialize(value);
     }
 
     private T? DeserializeValue<T>(string raw)
@@ -234,7 +240,7 @@ internal sealed class RedisCore(IOptionsMonitor<CoreQuantRedisOptions> options, 
             return (T)(object)new RedisLockOwner(raw);
         }
 
-        return serializer.Deserialize<T>(raw);
+        return _serializer.Deserialize<T>(raw);
     }
 
     private string ApplyPrefix(string key) => $"{_keyPrefix}:{key.TrimStart(':').Trim()}";
@@ -274,4 +280,5 @@ internal sealed class RedisCore(IOptionsMonitor<CoreQuantRedisOptions> options, 
     }
 
     #endregion
+
 }

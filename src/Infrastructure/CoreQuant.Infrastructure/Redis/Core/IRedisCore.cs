@@ -57,4 +57,9 @@ internal interface IRedisCore
     /// Acknowledges a stream entry for a consumer group.
     /// </summary>
     Task StreamAckAsync(uint dbIndex, string streamKey, string consumerGroup, string entryId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends <c>PING</c> to the selected logical database.
+    /// </summary>
+    Task PingAsync(uint dbIndex, CancellationToken cancellationToken = default);
 }

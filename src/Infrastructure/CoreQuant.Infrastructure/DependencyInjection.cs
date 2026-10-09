@@ -14,10 +14,7 @@ public static class DependencyInjection
     /// </summary>
     public static IServiceCollection AddCoreQuantInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        ArgumentNullException.ThrowIfNull(services);
-        ArgumentNullException.ThrowIfNull(configuration);
-
-        RedisServiceCollectionExtensions.AddCoreQuantRedis(services, configuration);
+        services.AddCoreQuantRedis(configuration);
 
         return services;
     }

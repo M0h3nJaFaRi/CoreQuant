@@ -79,6 +79,11 @@ public sealed record CoreQuantRedisOptions
     public RedisQueueOptions Queue { get; init; } = new();
 
     /// <summary>
+    /// Readiness health probe settings.
+    /// </summary>
+    public RedisHealthOptions Health { get; init; } = new();
+
+    /// <summary>
     /// Builds StackExchange.Redis <see cref="ConfigurationOptions"/> from these fields.
     /// </summary>
     public ConfigurationOptions ToConfigurationOptions()
