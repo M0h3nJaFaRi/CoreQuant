@@ -25,6 +25,11 @@ internal sealed class RedisScriptResult
     public static RedisScriptResult From(RedisResult result) => new(result);
 
     /// <summary>
+    /// Reads the result as a string when present.
+    /// </summary>
+    public string? AsString() => _result.IsNull ? null : (string)_result!;
+
+    /// <summary>
     /// Reads the result as <see cref="int"/>.
     /// </summary>
     public int AsInt32() => (int)_result;

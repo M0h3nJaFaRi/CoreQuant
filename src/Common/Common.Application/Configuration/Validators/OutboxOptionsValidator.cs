@@ -9,7 +9,7 @@ namespace Common.Application.Configuration.Validators;
 public sealed class OutboxOptionsValidator : IValidateOptions<OutboxOptions>
 {
     private static readonly HashSet<string> AllowedTransports =
-        new(StringComparer.OrdinalIgnoreCase) { "Logging", "InMemory" };
+        new(StringComparer.OrdinalIgnoreCase) { "Logging", "InMemory", "Redis" };
 
     /// <inheritdoc />
     public ValidateOptionsResult Validate(string? name, OutboxOptions options)

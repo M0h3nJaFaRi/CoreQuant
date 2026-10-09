@@ -59,6 +59,26 @@ public sealed record CoreQuantRedisOptions
     public RedisRateLimitOptions RateLimit { get; init; } = new();
 
     /// <summary>
+    /// Token store database settings.
+    /// </summary>
+    public RedisTokenOptions Token { get; init; } = new();
+
+    /// <summary>
+    /// Distributed lock database settings.
+    /// </summary>
+    public RedisLockOptions Lock { get; init; } = new();
+
+    /// <summary>
+    /// Integration event stream database settings.
+    /// </summary>
+    public RedisEventStoreOptions EventStore { get; init; } = new();
+
+    /// <summary>
+    /// Queue stream database settings.
+    /// </summary>
+    public RedisQueueOptions Queue { get; init; } = new();
+
+    /// <summary>
     /// Builds StackExchange.Redis <see cref="ConfigurationOptions"/> from these fields.
     /// </summary>
     public ConfigurationOptions ToConfigurationOptions()

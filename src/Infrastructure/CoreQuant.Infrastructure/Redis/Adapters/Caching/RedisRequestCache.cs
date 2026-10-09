@@ -30,7 +30,7 @@ internal sealed class RedisRequestCache(IRedisCore redis, IOptions<CoreQuantRedi
     public Task<bool> DeleteAsync(string key, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
-        return redis.DeleteAsync(_database, BuildKey(key), cancellationToken);
+        return redis.RemoveAsync(_database, BuildKey(key), cancellationToken);
     }
 
     private static string BuildKey(string key) => $"cache:{key.TrimStart(':').Trim()}";

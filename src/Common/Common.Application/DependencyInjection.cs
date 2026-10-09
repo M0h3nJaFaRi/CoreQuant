@@ -63,7 +63,8 @@ public static class DependencyInjection
 
         services.TryAddSingleton<IAuthorizationService, AllowAllAuthorizationService>();
         services.TryAddSingleton<ICurrentUserAccessor, NullCurrentUserAccessor>();
-        // IRequestCache / IIdempotencyStore / IRedisRateLimiter: Redis via CoreQuant.Infrastructure.AddCoreQuantInfrastructure.
+        // IRequestCache / IIdempotencyStore / IRedisRateLimiter / IRedisTokenStore / IRedisDistributedLock /
+        // IRedisEventStore / IRedisQueue: Redis via CoreQuant.Infrastructure.AddCoreQuantInfrastructure.
         services.TryAddSingleton<IOutboxWriter, NullOutboxWriter>();
         services.TryAddSingleton<IOutboxPublisher, NullOutboxPublisher>();
         services.TryAddScoped<IOutboxPendingBuffer, OutboxPendingBuffer>();

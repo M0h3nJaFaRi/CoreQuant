@@ -11,7 +11,7 @@ public sealed class OutboxOptions
     public const string SectionName = "Application:Outbox";
 
     /// <summary>
-    /// Publish transport: <c>Logging</c> (local/dev) or <c>InMemory</c> (process-local broker stand-in).
+    /// Publish transport: <c>Logging</c>, <c>InMemory</c>, or <c>Redis</c> (event store stream).
     /// </summary>
     public string Transport { get; set; } = "Logging";
 

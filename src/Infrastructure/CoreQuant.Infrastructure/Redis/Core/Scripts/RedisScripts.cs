@@ -36,4 +36,27 @@ internal static class RedisScripts
         redis.call('PEXPIRE', @key, window)
         return { 1, 0 }
         """);
+
+    /// <summary>
+    /// Atomically returns and deletes a string value. Returns nil when missing.
+    /// </summary>
+    public static readonly RedisScript GetDelString = RedisScript.Prepare(
+        """
+        local value = redis.call('GET', @key)
+        if value then
+            redis.call('DEL', @key)
+        end
+        return value
+        """);
+
+    /// <summary>
+    /// Releases a lock when the owner token matches. Returns 1 when deleted, 0 otherwise.
+    /// </summary>
+    public static readonly RedisScript ReleaseLock = RedisScript.Prepare(
+        """
+        if redis.call('GET', @key) == @token then
+            return redis.call('DEL', @key)
+        end
+        return 0
+        """);
 }

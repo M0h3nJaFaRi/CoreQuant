@@ -10,6 +10,7 @@ using CoreQuant.Infrastructure.Persistence.EF.Configuration.Validators;
 using CoreQuant.Infrastructure.Persistence.EF.Interceptors;
 using CoreQuant.Infrastructure.Persistence.EF.Interceptors.Observability;
 using CoreQuant.Infrastructure.Persistence.EF.Outbox;
+using CoreQuant.Infrastructure.Redis.Adapters.Events;
 
 namespace CoreQuant.Infrastructure.Persistence.EF;
 
@@ -43,9 +44,17 @@ public static class DependencyInjection
         services.AddSingleton<IOutboxPublisher>(sp =>
         {
             var transport = sp.GetRequiredService<IOptions<OutboxOptions>>().Value.Transport;
-            return string.Equals(transport, "InMemory", StringComparison.OrdinalIgnoreCase)
-                ? sp.GetRequiredService<InMemoryOutboxPublisher>()
-                : sp.GetRequiredService<LoggingOutboxPublisher>();
+            if (string.Equals(transport, "InMemory", StringComparison.OrdinalIgnoreCase))
+            {
+                return sp.GetRequiredService<InMemoryOutboxPublisher>();
+            }
+
+            if (string.Equals(transport, "Redis", StringComparison.OrdinalIgnoreCase))
+            {
+                return sp.GetRequiredService<RedisEventStoreOutboxPublisher>();
+            }
+
+            return sp.GetRequiredService<LoggingOutboxPublisher>();
         });
 
         services.TryAddScoped<SoftDeleteInterceptor>();

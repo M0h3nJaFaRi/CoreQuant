@@ -34,6 +34,19 @@ internal sealed class CoreQuantRedisOptionsValidator : IValidateOptions<CoreQuan
         ValidateDatabase(failures, $"{CoreQuantRedisOptions.SectionName}:Cache:Database", options.Cache.Database);
         ValidateDatabase(failures, $"{CoreQuantRedisOptions.SectionName}:Idempotency:Database", options.Idempotency.Database);
         ValidateDatabase(failures, $"{CoreQuantRedisOptions.SectionName}:RateLimit:Database", options.RateLimit.Database);
+        ValidateDatabase(failures, $"{CoreQuantRedisOptions.SectionName}:Token:Database", options.Token.Database);
+        ValidateDatabase(failures, $"{CoreQuantRedisOptions.SectionName}:Lock:Database", options.Lock.Database);
+        ValidateDatabase(failures, $"{CoreQuantRedisOptions.SectionName}:EventStore:Database", options.EventStore.Database);
+        ValidateDatabase(failures, $"{CoreQuantRedisOptions.SectionName}:Queue:Database", options.Queue.Database);
+
+        if (string.IsNullOrWhiteSpace(options.EventStore.DefaultStream))
+            failures.Add($"{CoreQuantRedisOptions.SectionName}:EventStore:DefaultStream is required.");
+
+        if (options.EventStore.MaxStreamLength < 0)
+            failures.Add($"{CoreQuantRedisOptions.SectionName}:EventStore:MaxStreamLength must be zero or greater.");
+
+        if (options.Queue.MaxStreamLength < 0)
+            failures.Add($"{CoreQuantRedisOptions.SectionName}:Queue:MaxStreamLength must be zero or greater.");
 
         return failures.Count > 0 ? ValidateOptionsResult.Fail(failures) : ValidateOptionsResult.Success;
     }

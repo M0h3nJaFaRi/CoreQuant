@@ -1,9 +1,17 @@
 using Common.Application.Caching;
+using Common.Application.Events;
 using Common.Application.Idempotency;
+using Common.Application.Locking;
+using Common.Application.Queuing;
 using Common.Application.RateLimiting;
+using Common.Application.Tokens;
 using CoreQuant.Infrastructure.Redis.Adapters.Caching;
+using CoreQuant.Infrastructure.Redis.Adapters.Events;
 using CoreQuant.Infrastructure.Redis.Adapters.Idempotency;
+using CoreQuant.Infrastructure.Redis.Adapters.Locking;
+using CoreQuant.Infrastructure.Redis.Adapters.Queuing;
 using CoreQuant.Infrastructure.Redis.Adapters.RateLimiting;
+using CoreQuant.Infrastructure.Redis.Adapters.Tokens;
 using CoreQuant.Infrastructure.Redis.Configuration.Options;
 using CoreQuant.Infrastructure.Redis.Configuration.Validators;
 using CoreQuant.Infrastructure.Redis.Core;
@@ -40,6 +48,11 @@ internal static class RedisServiceCollectionExtensions
         services.AddSingleton<IRequestCache, RedisRequestCache>();
         services.AddSingleton<IIdempotencyStore, RedisIdempotencyStore>();
         services.AddSingleton<IRedisRateLimiter, RedisRateLimiter>();
+        services.AddSingleton<IRedisTokenStore, RedisTokenStore>();
+        services.AddSingleton<IRedisDistributedLock, RedisDistributedLock>();
+        services.AddSingleton<IRedisEventStore, RedisEventStore>();
+        services.AddSingleton<IRedisQueue, RedisQueue>();
+        services.TryAddSingleton<RedisEventStoreOutboxPublisher>();
 
         return services;
     }

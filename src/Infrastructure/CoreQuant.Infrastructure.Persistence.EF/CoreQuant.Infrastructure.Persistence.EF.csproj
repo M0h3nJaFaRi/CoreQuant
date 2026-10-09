@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\Domain\CoreQuant.Domain\CoreQuant.Domain.csproj" />
     <ProjectReference Include="..\..\Common\Infrastructure\Common.Infrastructure.Persistence.EF\Common.Infrastructure.Persistence.EF.csproj" />
     <ProjectReference Include="..\..\Framework\CoreQuant.Framework\CoreQuant.Framework.csproj" />
+    <ProjectReference Include="..\CoreQuant.Infrastructure\CoreQuant.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
