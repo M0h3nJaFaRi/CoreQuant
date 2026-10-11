@@ -1,7 +1,6 @@
 using Common.Scheduler;
 using CoreQuant.Infrastructure;
 using CoreQuant.Infrastructure.Persistence.EF;
-using CoreQuant.Scheduler;
 using Framework;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -20,7 +19,6 @@ builder.Services.AddCommonScheduler(
 
 builder.Services.AddCoreQuantInfrastructure(builder.Configuration);
 builder.Services.AddCoreQuantPersistenceEf(builder.Configuration);
-builder.Services.AddHostedService<OutboxRetrySchedulerHostedService>();
 
 var host = builder.Build();
 host.Run();

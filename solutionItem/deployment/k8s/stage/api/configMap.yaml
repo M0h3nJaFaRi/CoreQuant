@@ -59,19 +59,48 @@ data:
   Framework__Encryption__RSA__PublicKey: ""
 
   # =========================
-  # Databases (Write)
+  # Databases
   # =========================
-  Infrastructure__Databases__Write__Host: ""
-  Infrastructure__Databases__Write__Port: "3306"
-  Infrastructure__Databases__Write__Name: ""
-  Infrastructure__Databases__Write__CommandTimeout: "00:00:30"
+  Infrastructure__Databases__Core__Host: ""
+  Infrastructure__Databases__Core__Port: "3306"
+  Infrastructure__Databases__Core__Name: ""
+  Infrastructure__Databases__Core__CommandTimeout: "00:00:30"
 
-  # =========================
-  # Databases (Read)
-  # =========================
-  Infrastructure__Databases__Read__Host: ""
-  Infrastructure__Databases__Read__Port: "3306"
-  Infrastructure__Databases__Read__Name: ""
+  Infrastructure__Databases__News__Host: ""
+  Infrastructure__Databases__News__Port: "3306"
+  Infrastructure__Databases__News__Name: ""
+  Infrastructure__Databases__News__CommandTimeout: "00:00:30"
+
+  Infrastructure__Databases__Forex__Host: ""
+  Infrastructure__Databases__Forex__Port: "3306"
+  Infrastructure__Databases__Forex__Name: ""
+  Infrastructure__Databases__Forex__CommandTimeout: "00:00:30"
+
+  Infrastructure__Databases__Index__Host: ""
+  Infrastructure__Databases__Index__Port: "3306"
+  Infrastructure__Databases__Index__Name: ""
+  Infrastructure__Databases__Index__CommandTimeout: "00:00:30"
+
+  Infrastructure__Databases__Metal__Host: ""
+  Infrastructure__Databases__Metal__Port: "3306"
+  Infrastructure__Databases__Metal__Name: ""
+  Infrastructure__Databases__Metal__CommandTimeout: "00:00:30"
+
+  Infrastructure__Databases__Stock__Host: ""
+  Infrastructure__Databases__Stock__Port: "3306"
+  Infrastructure__Databases__Stock__Name: ""
+  Infrastructure__Databases__Stock__CommandTimeout: "00:00:30"
+
+  Infrastructure__Databases__Crypto__Host: ""
+  Infrastructure__Databases__Crypto__Port: "3306"
+  Infrastructure__Databases__Crypto__Name: ""
+  Infrastructure__Databases__Crypto__CommandTimeout: "00:00:30"
+
+  Infrastructure__Databases__Commodity__Host: ""
+  Infrastructure__Databases__Commodity__Port: "3306"
+  Infrastructure__Databases__Commodity__Name: ""
+  Infrastructure__Databases__Commodity__CommandTimeout: "00:00:30"
+
 
   # =========================
   # Redis
@@ -98,10 +127,3 @@ data:
   # =========================
   Infrastructure__Acl__DevAuthEnabled: "false"
 
-  # =========================
-  # Outbox
-  # =========================
-  Application__Outbox__Transport: "Logging"
-  Application__Outbox__RetryBatchSize: "50"
-  Application__Outbox__RetryLeaseSeconds: "30"
-  Application__Outbox__SchedulerIntervalSeconds: "15"

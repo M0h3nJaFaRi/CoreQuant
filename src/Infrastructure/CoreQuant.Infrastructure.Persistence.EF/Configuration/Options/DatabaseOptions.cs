@@ -1,17 +1,12 @@
 namespace CoreQuant.Infrastructure.Persistence.EF.Configuration.Options;
 
 /// <summary>
-/// MySQL connection settings for the single MVP database (no read replica).
+/// Named MySQL endpoints under <c>Infrastructure:Databases</c> (one entry per EF DbContext).
 /// </summary>
-public sealed record DatabaseOptions
+public sealed class DatabaseOptions : Dictionary<string, DatabaseEndpointOptions>
 {
     /// <summary>
     /// Configuration section name under the host tree.
     /// </summary>
     public const string SectionName = "Infrastructure:Databases";
-    
-    /// <summary>
-    /// Configuration section name under the host tree.
-    /// </summary>
-    public IReadOnlyDictionary<string, DatabaseEndpointOptions> DataBases { get; init; } = default!;
 }

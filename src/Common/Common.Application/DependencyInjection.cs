@@ -1,6 +1,7 @@
 using System.Reflection;
 using Common.Application.Authorization;
 using Common.Application.Cqrs;
+using Common.Application.Cqrs.Defaults;
 using Common.Application.Cqrs.Abstractions;
 using Common.Application.Cqrs.Behaviors.Authorization;
 using Common.Application.Configuration.Options;
@@ -48,6 +49,9 @@ public static class DependencyInjection
         services.AddOptions<RateLimitBehaviorOptions>()
             .ValidateOnStart();
         services.AddSingleton<IValidateOptions<RateLimitBehaviorOptions>, RateLimitBehaviorOptionsValidator>();
+
+        services.TryAddScoped<ICurrentUserAccessor, NullCurrentUserAccessor>();
+        services.TryAddScoped<IAuthorizationService, AllowAllAuthorizationService>();
 
         services.TryAddScoped<ICommandBus, CommandBus>();
         services.TryAddScoped<IQueryBus, QueryBus>();

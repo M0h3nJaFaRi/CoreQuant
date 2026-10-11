@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Options;
+using CoreQuant.Infrastructure.Persistence.EF.Configuration;
 using CoreQuant.Infrastructure.Persistence.EF.Configuration.Options;
 
 namespace CoreQuant.Infrastructure.Persistence.EF.Configuration.Validators;
@@ -14,25 +15,41 @@ internal sealed class DatabaseOptionsValidator : IValidateOptions<DatabaseOption
         ArgumentNullException.ThrowIfNull(options);
 
         var failures = new List<string>();
-        var prefix = DatabaseOptions.SectionName;
 
-        if (!options.IsConfigured)
+        foreach (var registration in CoreQuantDbContextRegistration.All)
         {
-            failures.Add($"{prefix}:Host and Name are required.");
-        }
+            if (!options.TryGetValue(registration.ConfigurationKey, out var endpoint))
+            {
+                failures.Add($"{DatabaseOptions.SectionName}:{registration.ConfigurationKey} is required.");
+                continue;
+            }
 
-        if (options.Port <= 0)
-        {
-            failures.Add($"{prefix}:Port must be greater than zero.");
-        }
-
-        if (options.CommandTimeout is { } timeout && timeout <= TimeSpan.Zero)
-        {
-            failures.Add($"{prefix}:CommandTimeout must be greater than zero when set.");
+            ValidateEndpoint(endpoint, $"{DatabaseOptions.SectionName}:{registration.ConfigurationKey}", failures);
         }
 
         return failures.Count > 0
             ? ValidateOptionsResult.Fail(failures)
             : ValidateOptionsResult.Success;
+    }
+
+    private static void ValidateEndpoint(
+        DatabaseEndpointOptions endpoint,
+        string prefix,
+        List<string> failures)
+    {
+        if (!endpoint.IsConfigured)
+        {
+            failures.Add($"{prefix}:Host and Name are required.");
+        }
+
+        if (endpoint.Port <= 0)
+        {
+            failures.Add($"{prefix}:Port must be greater than zero.");
+        }
+
+        if (endpoint.CommandTimeout is { } timeout && timeout <= TimeSpan.Zero)
+        {
+            failures.Add($"{prefix}:CommandTimeout must be greater than zero when set.");
+        }
     }
 }

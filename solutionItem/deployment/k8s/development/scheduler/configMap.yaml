@@ -58,19 +58,48 @@ data:
   Framework__Encryption__RSA__PublicKey: ""
 
   # =========================
-  # Databases (Write)
+  # Databases
   # =========================
-  Infrastructure__Databases__Write__Host: "127.0.0.1"
-  Infrastructure__Databases__Write__Port: "3306"
-  Infrastructure__Databases__Write__Name: "core_quant_dev"
-  Infrastructure__Databases__Write__CommandTimeout: "00:00:30"
+  Infrastructure__Databases__Core__Host: "127.0.0.1"
+  Infrastructure__Databases__Core__Port: "3306"
+  Infrastructure__Databases__Core__Name: "core_quant_core"
+  Infrastructure__Databases__Core__CommandTimeout: "00:00:30"
 
-  # =========================
-  # Databases (Read)
-  # =========================
-  Infrastructure__Databases__Read__Host: "127.0.0.1"
-  Infrastructure__Databases__Read__Port: "3306"
-  Infrastructure__Databases__Read__Name: "core_quant_dev"
+  Infrastructure__Databases__News__Host: "127.0.0.1"
+  Infrastructure__Databases__News__Port: "3306"
+  Infrastructure__Databases__News__Name: "core_quant_news"
+  Infrastructure__Databases__News__CommandTimeout: "00:00:30"
+
+  Infrastructure__Databases__Forex__Host: "127.0.0.1"
+  Infrastructure__Databases__Forex__Port: "3306"
+  Infrastructure__Databases__Forex__Name: "core_quant_forex"
+  Infrastructure__Databases__Forex__CommandTimeout: "00:00:30"
+
+  Infrastructure__Databases__Index__Host: "127.0.0.1"
+  Infrastructure__Databases__Index__Port: "3306"
+  Infrastructure__Databases__Index__Name: "core_quant_index"
+  Infrastructure__Databases__Index__CommandTimeout: "00:00:30"
+
+  Infrastructure__Databases__Metal__Host: "127.0.0.1"
+  Infrastructure__Databases__Metal__Port: "3306"
+  Infrastructure__Databases__Metal__Name: "core_quant_metal"
+  Infrastructure__Databases__Metal__CommandTimeout: "00:00:30"
+
+  Infrastructure__Databases__Stock__Host: "127.0.0.1"
+  Infrastructure__Databases__Stock__Port: "3306"
+  Infrastructure__Databases__Stock__Name: "core_quant_stock"
+  Infrastructure__Databases__Stock__CommandTimeout: "00:00:30"
+
+  Infrastructure__Databases__Crypto__Host: "127.0.0.1"
+  Infrastructure__Databases__Crypto__Port: "3306"
+  Infrastructure__Databases__Crypto__Name: "core_quant_crypto"
+  Infrastructure__Databases__Crypto__CommandTimeout: "00:00:30"
+
+  Infrastructure__Databases__Commodity__Host: "127.0.0.1"
+  Infrastructure__Databases__Commodity__Port: "3306"
+  Infrastructure__Databases__Commodity__Name: "core_quant_commodity"
+  Infrastructure__Databases__Commodity__CommandTimeout: "00:00:30"
+
 
   # =========================
   # Redis
@@ -92,10 +121,3 @@ data:
   Infrastructure__Persistence__SlowQuery__ErrorThreshold: "00:00:00.500"
   Infrastructure__Persistence__SlowQuery__CriticalThreshold: "00:00:01"
 
-  # =========================
-  # Outbox
-  # =========================
-  Application__Outbox__Transport: "InMemory"
-  Application__Outbox__RetryBatchSize: "50"
-  Application__Outbox__RetryLeaseSeconds: "30"
-  Application__Outbox__SchedulerIntervalSeconds: "15"

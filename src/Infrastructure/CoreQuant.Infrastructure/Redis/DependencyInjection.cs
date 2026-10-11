@@ -51,7 +51,6 @@ internal static class RedisServiceCollectionExtensions
         services.AddSingleton<IRedisDistributedLock, RedisDistributedLock>();
         services.AddSingleton<IRedisEventStore, RedisEventStore>();
         services.AddSingleton<IRedisQueue, RedisQueue>();
-        services.TryAddSingleton<RedisEventStoreOutboxPublisher>();
 
         services.AddHealthChecks().AddCheck<RedisHealthCheck>("redis", failureStatus: HealthStatus.Unhealthy, tags: ["ready"]);
 

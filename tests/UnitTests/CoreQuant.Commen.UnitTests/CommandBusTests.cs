@@ -1,7 +1,6 @@
 using Common.Application;
 using Common.Application.Caching;
 using Common.Application.Cqrs.Abstractions;
-using Common.Application.Cqrs.Defaults;
 using Common.Application.Idempotency;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

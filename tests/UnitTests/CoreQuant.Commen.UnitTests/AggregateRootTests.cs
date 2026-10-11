@@ -17,10 +17,10 @@ public sealed class AggregateRootTests
     public void MarkAsRemoved_Sets_SoftDelete()
     {
         var aggregate = SampleAggregate.Create(2);
-        aggregate.MarkAsRemoved(99);
+        aggregate.MarkAsRemoved(99ul);
 
         Assert.True(aggregate.IsDeleted);
-        Assert.Equal(99, aggregate.DeletedBy);
+        Assert.Equal(99ul, aggregate.DeletedBy);
         Assert.NotNull(aggregate.DeletedAt);
     }
 

@@ -1,7 +1,8 @@
+using System.Reflection;
 using Common.Infrastructure.Persistence.EF.DbContexts;
 using Common.Infrastructure.Persistence.EF.UnitOfWork;
+using CoreQuant.Infrastructure.Persistence.EF.Configuration;
 using CoreQuant.Infrastructure.Persistence.EF.Configuration.Options;
-using CoreQuant.Infrastructure.Persistence.EF.Configuration.Validators;
 using CoreQuant.Infrastructure.Persistence.EF.DbContexts.Core;
 using CoreQuant.Infrastructure.Persistence.EF.DbContexts.Markets.Commodity;
 using CoreQuant.Infrastructure.Persistence.EF.DbContexts.Markets.Crypto;
@@ -10,6 +11,7 @@ using CoreQuant.Infrastructure.Persistence.EF.DbContexts.Markets.Indices;
 using CoreQuant.Infrastructure.Persistence.EF.DbContexts.Markets.Metals;
 using CoreQuant.Infrastructure.Persistence.EF.DbContexts.Markets.Stocks;
 using CoreQuant.Infrastructure.Persistence.EF.DbContexts.News;
+using CoreQuant.Infrastructure.Persistence.EF.Configuration.Validators;
 using CoreQuant.Infrastructure.Persistence.EF.Interceptors;
 using CoreQuant.Infrastructure.Persistence.EF.Observability;
 using CoreQuant.Infrastructure.Persistence.EF.UnitOfWorks;
@@ -29,8 +31,7 @@ public static class DependencyInjection
     private static readonly MySqlServerVersion DefaultServerVersion = new(new Version(8, 0, 36));
 
     /// <summary>
-    /// Registers EF persistence, SlowQuery options, MySQL and Etc
-    /// from <c>Infrastructure:Databases</c>.
+    /// Registers EF persistence, SlowQuery options, MySQL DbContexts from <c>Infrastructure:Databases</c>.
     /// </summary>
     public static IServiceCollection AddCoreQuantPersistenceEf(this IServiceCollection services, IConfiguration configuration)
     {
@@ -57,6 +58,7 @@ public static class DependencyInjection
 
         return services;
     }
+
     internal static IServiceCollection AddCoreQuantDbContext(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IValidateOptions<DatabaseOptions>, DatabaseOptionsValidator>();
@@ -65,19 +67,14 @@ public static class DependencyInjection
                 .Bind(configuration.GetSection(DatabaseOptions.SectionName))
                 .ValidateOnStart();
 
-        // fix : find and bind to regester DbContext
+        var databaseOptions = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>() ?? [];
 
-        services.AddMySqlDbContext<NewsDbContext>(databaseOptions);
-        services.AddMySqlDbContext<ForexDbContext>(databaseOptions);
-        services.AddMySqlDbContext<IndexDbContext>(databaseOptions);
-        services.AddMySqlDbContext<MetalDbContext>(databaseOptions);
-        services.AddMySqlDbContext<StockDbContext>(databaseOptions);
-        services.AddMySqlDbContext<CryptoDbContext>(databaseOptions);
-        services.AddMySqlDbContext<CoreQuantDbContext>(databaseOptions);
-        services.AddMySqlDbContext<CommodityDbContext>(databaseOptions);
+        foreach (var registration in CoreQuantDbContextRegistration.All)
+            RegisterMySqlDbContext(services, databaseOptions, registration);
 
         return services;
     }
+
     internal static IServiceCollection AddCoreQuantInterceptor(this IServiceCollection services, IConfiguration configuration)
     {
         services.TryAddSingleton<IValidateOptions<SlowQueryInterceptorOptions>, SlowQueryInterceptorOptionsValidator>();
@@ -94,6 +91,7 @@ public static class DependencyInjection
 
         return services;
     }
+
     internal static IServiceCollection AddCoreQuantPersistenceObservability(this IServiceCollection services, IConfiguration configuration)
     {
         services.TryAddSingleton<EfPersistenceMetrics>();
@@ -101,17 +99,31 @@ public static class DependencyInjection
         return services;
     }
 
+    private static void RegisterMySqlDbContext(IServiceCollection services, DatabaseOptions databaseOptions, CoreQuantDbContextRegistration.DbContextRegistration registration)
+    {
+        if (!databaseOptions.TryGetValue(registration.ConfigurationKey, out var endpoint))
+            throw new InvalidOperationException($"Missing database configuration '{registration.ConfigurationKey}' at {DatabaseOptions.SectionName}:{registration.ConfigurationKey}.");
+
+        var addMethod = typeof(DependencyInjection).GetMethod(nameof(AddMySqlDbContext), BindingFlags.NonPublic | BindingFlags.Static)!
+                                                   .MakeGenericMethod(registration.ContextType);
+
+        addMethod.Invoke(null, [services, endpoint]);
+    }
+
     private static IServiceCollection AddMySqlDbContext<TContext>(this IServiceCollection services, DatabaseEndpointOptions endpoint)
     where TContext : BaseDbContext
     {
         var connectionString = endpoint.BuildMySqlConnectionString();
+        ArgumentException.ThrowIfNullOrWhiteSpace(connectionString);
 
         services.AddDbContext<TContext>((sp, options) =>
         {
             options.UseMySql(connectionString, DefaultServerVersion, builder =>
             {
                 if (endpoint.CommandTimeoutSeconds is { } timeout)
+                {
                     builder.CommandTimeout(timeout);
+                }
             });
 
             options.AddInterceptors(sp.GetRequiredService<CommandInterceptor>());

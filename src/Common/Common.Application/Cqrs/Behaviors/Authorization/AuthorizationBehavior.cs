@@ -9,13 +9,12 @@ namespace Common.Application.Cqrs.Behaviors.Authorization;
 /// </summary>
 internal sealed class AuthorizationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
 {
-    private readonly object _authorizationService;
+    private readonly IAuthorizationService _authorizationService;
 
     /// <summary>
     /// Creates the behavior.
     /// </summary>
-    //public AuthorizationBehavior(IAuthorizationService authorizationService)
-    public AuthorizationBehavior(object authorizationService)
+    public AuthorizationBehavior(IAuthorizationService authorizationService)
     {
         ArgumentNullException.ThrowIfNull(authorizationService);
         _authorizationService = authorizationService;
@@ -30,12 +29,14 @@ internal sealed class AuthorizationBehavior<TRequest, TResponse> : IPipelineBeha
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        //var allowed = await _authorizationService.AuthorizeAsync(typeof(TRequest), cancellationToken).ConfigureAwait(false);
+        var allowed = await _authorizationService
+            .AuthorizeAsync(typeof(TRequest), cancellationToken)
+            .ConfigureAwait(false);
 
-        //if (!allowed)
-        //{
-        //    throw new ForbiddenException($"Caller is not authorized for '{typeof(TRequest).Name}'.");
-        //}
+        if (!allowed)
+        {
+            throw new ForbiddenException($"Caller is not authorized for '{typeof(TRequest).Name}'.");
+        }
 
         return await next().ConfigureAwait(false);
     }
