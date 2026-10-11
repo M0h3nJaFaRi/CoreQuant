@@ -1,6 +1,5 @@
 using System.Reflection;
 using Common.Application.Authorization;
-using Common.Application.Caching;
 using Common.Application.Cqrs;
 using Common.Application.Cqrs.Abstractions;
 using Common.Application.Cqrs.Behaviors.Authorization;
@@ -13,11 +12,7 @@ using Common.Application.Cqrs.Behaviors.Metrics;
 using Common.Application.Cqrs.Behaviors.Performance;
 using Common.Application.Cqrs.Behaviors.RateLimit;
 using Common.Application.Cqrs.Behaviors.Validation;
-using Common.Application.Cqrs.Defaults;
 using Common.Application.Cqrs.Pipeline;
-using Common.Application.Idempotency;
-using Common.Application.Outbox;
-using Common.Application.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
@@ -54,23 +49,9 @@ public static class DependencyInjection
             .ValidateOnStart();
         services.AddSingleton<IValidateOptions<RateLimitBehaviorOptions>, RateLimitBehaviorOptionsValidator>();
 
-        services.AddOptions<OutboxOptions>()
-            .ValidateOnStart();
-        services.AddSingleton<IValidateOptions<OutboxOptions>, OutboxOptionsValidator>();
-
         services.TryAddScoped<ICommandBus, CommandBus>();
         services.TryAddScoped<IQueryBus, QueryBus>();
 
-        services.TryAddSingleton<IAuthorizationService, AllowAllAuthorizationService>();
-        services.TryAddSingleton<ICurrentUserAccessor, NullCurrentUserAccessor>();
-        // IRequestCache / IIdempotencyStore / IRedisRateLimiter / IRedisTokenStore / IRedisDistributedLock /
-        // IRedisEventStore / IRedisQueue: Redis via CoreQuant.Infrastructure.AddCoreQuantInfrastructure.
-        services.TryAddSingleton<IOutboxWriter, NullOutboxWriter>();
-        services.TryAddSingleton<IOutboxPublisher, NullOutboxPublisher>();
-        services.TryAddScoped<IOutboxPendingBuffer, OutboxPendingBuffer>();
-        services.TryAddSingleton<IOutboxCompletionService, NullOutboxCompletionService>();
-        services.TryAddSingleton<IOutboxRetryJob, NullOutboxRetryJob>();
-        // Meter comes from Framework.AddFramework — do not create a second Meter.
         services.TryAddSingleton<CqrsMetrics>();
 
         services.TryAddEnumerable(ServiceDescriptor.Transient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>)));

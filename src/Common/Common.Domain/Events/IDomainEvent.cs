@@ -18,5 +18,5 @@ public interface IDomainEvent
     /// <summary>
     /// Payload schema version for consumers.
     /// </summary>
-    int SchemaVersion { get; }
+    uint SchemaVersion { get; }
 }

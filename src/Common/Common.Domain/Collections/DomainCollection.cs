@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace Common.Domain.Collections;
 
 /// <summary>
@@ -16,7 +18,7 @@ public sealed class DomainCollection<T> : IReadOnlyList<T>
     /// <inheritdoc />
     public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
 
-    System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     /// <summary>
     /// Adds an item.

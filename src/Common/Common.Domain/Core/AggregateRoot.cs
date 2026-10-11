@@ -7,24 +7,19 @@ namespace Common.Domain.Core;
 /// </summary>
 /// <typeparam name="TId">Identifier type.</typeparam>
 public abstract class AggregateRoot<TId> : Entity<TId>
-    where TId : notnull
+where TId : notnull
 {
     private readonly List<IDomainEvent> _domainEvents = [];
 
     /// <summary>
     /// EF Core materialization constructor.
     /// </summary>
-    protected AggregateRoot()
-    {
-    }
+    protected AggregateRoot() { }
 
     /// <summary>
     /// Creates an aggregate with the given identity.
     /// </summary>
-    protected AggregateRoot(TId id)
-        : base(id)
-    {
-    }
+    protected AggregateRoot(TId id, ulong? userId = null) : base(id, userId) { }
 
     /// <summary>
     /// Raised domain events awaiting dispatch.

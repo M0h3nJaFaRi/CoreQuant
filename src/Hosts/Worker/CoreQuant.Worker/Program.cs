@@ -18,7 +18,7 @@ builder.Services.AddCommonWorker(
     typeof(CoreQuant.Application.AssemblyMarker).Assembly);
 
 builder.Services.AddCoreQuantInfrastructure(builder.Configuration);
-builder.Services.AddCoreQuantPersistenceEfMySql(builder.Configuration);
+builder.Services.AddCoreQuantPersistenceEf(builder.Configuration);
 
 var host = builder.Build();
 host.Run();

@@ -24,14 +24,11 @@ public sealed class AggregateRootTests
         Assert.NotNull(aggregate.DeletedAt);
     }
 
-    private sealed class SampleAggregate : AggregateRoot<int>
+    private sealed class SampleAggregate : AggregateRoot<uint>
     {
-        private SampleAggregate(int id)
-            : base(id)
-        {
-        }
+        private SampleAggregate(uint id): base(id) { }
 
-        public static SampleAggregate Create(int id)
+        public static SampleAggregate Create(uint id)
         {
             var aggregate = new SampleAggregate(id);
             aggregate.RaiseDomainEvent(new SampleCreated(id));
@@ -39,5 +36,5 @@ public sealed class AggregateRootTests
         }
     }
 
-    private sealed record SampleCreated(int Id) : DomainEvent;
+    private sealed record SampleCreated(uint Id) : DomainEvent;
 }

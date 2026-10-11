@@ -13,10 +13,7 @@ public abstract class ValueObject : IEquatable<ValueObject>
     /// <inheritdoc />
     public bool Equals(ValueObject? other)
     {
-        if (other is null || other.GetType() != GetType())
-        {
-            return false;
-        }
+        if (other is null || other.GetType() != GetType()) return false;
 
         return GetEqualityComponents().SequenceEqual(other.GetEqualityComponents());
     }
@@ -28,10 +25,9 @@ public abstract class ValueObject : IEquatable<ValueObject>
     public override int GetHashCode()
     {
         var hash = new HashCode();
+        
         foreach (var component in GetEqualityComponents())
-        {
             hash.Add(component);
-        }
 
         return hash.ToHashCode();
     }

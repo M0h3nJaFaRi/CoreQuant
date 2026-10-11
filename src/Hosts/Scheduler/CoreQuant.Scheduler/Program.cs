@@ -19,7 +19,7 @@ builder.Services.AddCommonScheduler(
     typeof(CoreQuant.Application.AssemblyMarker).Assembly);
 
 builder.Services.AddCoreQuantInfrastructure(builder.Configuration);
-builder.Services.AddCoreQuantPersistenceEfMySql(builder.Configuration);
+builder.Services.AddCoreQuantPersistenceEf(builder.Configuration);
 builder.Services.AddHostedService<OutboxRetrySchedulerHostedService>();
 
 var host = builder.Build();

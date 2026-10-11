@@ -1,5 +1,5 @@
-using Common.Application.Configuration.Options;
 using Microsoft.Extensions.Options;
+using Common.Application.Configuration.Options;
 
 namespace Common.Application.Configuration.Validators;
 
@@ -11,13 +11,8 @@ internal sealed class PerformanceBehaviorOptionsValidator : IValidateOptions<Per
     /// <inheritdoc />
     public ValidateOptionsResult Validate(string? name, PerformanceBehaviorOptions options)
     {
-        ArgumentNullException.ThrowIfNull(options);
-
         if (options.SlowRequestThreshold <= TimeSpan.Zero)
-        {
-            return ValidateOptionsResult.Fail(
-                $"{PerformanceBehaviorOptions.SectionName}:SlowRequestThreshold must be greater than zero.");
-        }
+            return ValidateOptionsResult.Fail($"{PerformanceBehaviorOptions.SectionName}:SlowRequestThreshold must be greater than zero.");
 
         return ValidateOptionsResult.Success;
     }

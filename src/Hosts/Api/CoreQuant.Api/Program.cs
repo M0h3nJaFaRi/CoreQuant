@@ -22,7 +22,7 @@ builder.Services.AddCommonApi(
 
 builder.Services.AddCoreQuantInfrastructure(builder.Configuration);
 builder.Services.AddCoreQuantAcl(builder.Configuration);
-builder.Services.AddCoreQuantPersistenceEfMySql(builder.Configuration);
+builder.Services.AddCoreQuantPersistenceEf(builder.Configuration);
 
 var app = builder.Build();
 

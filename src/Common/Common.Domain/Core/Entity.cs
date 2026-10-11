@@ -5,63 +5,64 @@ namespace Common.Domain.Core;
 /// </summary>
 /// <typeparam name="TId">Identifier type.</typeparam>
 public abstract class Entity<TId>
-    where TId : notnull
+where TId : notnull
 {
     /// <summary>
     /// EF Core materialization constructor.
     /// </summary>
     protected Entity()
     {
+        StampCreated();
     }
 
     /// <summary>
     /// Creates an entity with the given identity.
     /// </summary>
-    protected Entity(TId id)
+    protected Entity(TId id, ulong? userId = null)
     {
         Id = id;
-        CreatedAt = DateTimeOffset.UtcNow;
+        StampCreated(userId);
     }
 
     /// <summary>
     /// Entity identity.
     /// </summary>
-    public TId Id { get; protected set; } = default!;
+    public TId Id { get; private set; } = default!;
 
     /// <summary>
     /// UTC creation timestamp.
     /// </summary>
-    public DateTimeOffset CreatedAt { get; protected set; }
+    public DateTimeOffset CreatedAt { get; private set; }
 
     /// <summary>
     /// UTC last modification timestamp.
     /// </summary>
-    public DateTimeOffset? ModifiedAt { get; protected set; }
+    public DateTimeOffset? ModifiedAt { get; private set; }
 
     /// <summary>
     /// UTC soft-delete timestamp. Null means active.
     /// </summary>
-    public DateTimeOffset? DeletedAt { get; protected set; }
+    public DateTimeOffset? DeletedAt { get; private set; }
 
     /// <summary>
     /// Acting user id that created the row (snowflake). Null = unknown/system.
     /// </summary>
-    public long? CreatedBy { get; protected set; }
+    public ulong? CreatedBy { get; private set; }
 
     /// <summary>
     /// Acting user id that last modified the row.
     /// </summary>
-    public long? ModifiedBy { get; protected set; }
+    public ulong? ModifiedBy { get; private set; }
 
     /// <summary>
     /// Acting user id that soft-deleted the row.
     /// </summary>
-    public long? DeletedBy { get; protected set; }
+    public ulong? DeletedBy { get; private set; }
 
     /// <summary>
     /// Optimistic concurrency token.
     /// </summary>
-    public int Version { get; protected set; }
+    public uint Version { get; private set; }
 
     /// <summary>
     /// True when the entity is soft-deleted.
@@ -71,12 +72,9 @@ public abstract class Entity<TId>
     /// <summary>
     /// Stamps creation actor when known at create time.
     /// </summary>
-    public void StampCreated(long? createdBy = null)
+    protected void StampCreated(ulong? createdBy = null)
     {
-        if (CreatedAt == default)
-        {
-            CreatedAt = DateTimeOffset.UtcNow;
-        }
+        if (CreatedAt == default) CreatedAt = DateTimeOffset.UtcNow;
 
         CreatedBy = createdBy;
     }
@@ -84,7 +82,7 @@ public abstract class Entity<TId>
     /// <summary>
     /// Marks the entity as modified.
     /// </summary>
-    public void Touch(long? modifiedBy = null)
+    protected void Touch(ulong? modifiedBy = null)
     {
         ModifiedAt = DateTimeOffset.UtcNow;
         ModifiedBy = modifiedBy;
@@ -94,17 +92,12 @@ public abstract class Entity<TId>
     /// <summary>
     /// Soft-deletes the entity.
     /// </summary>
-    public void MarkAsRemoved(long? deletedBy = null)
+    public void MarkAsRemoved(ulong? deletedBy = null)
     {
-        if (IsDeleted)
-        {
-            return;
-        }
+        if (IsDeleted) return;
 
         DeletedAt = DateTimeOffset.UtcNow;
         DeletedBy = deletedBy;
-        ModifiedAt = DeletedAt;
-        ModifiedBy = deletedBy;
         Version++;
     }
 }

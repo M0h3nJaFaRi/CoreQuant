@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using CoreQuant.Infrastructure.Persistence.EF;
 using CoreQuant.Infrastructure.Persistence.EF.Configuration.Options;
-using CoreQuant.Infrastructure.Persistence.EF.Providers.MySql;
+using CoreQuant.Infrastructure.Persistence.EF.DbContexts.Core;
 
 namespace CoreQuant.Api.IntegrationTests;
 
@@ -43,8 +43,8 @@ public sealed class MySqlFixture : IAsyncLifetime
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddCommonApplication();
-        services.AddCoreQuantPersistenceEf();
-        services.AddMySqlWriteDbContext<CoreQuantWriteDbContext>(endpoint =>
+        services.AddCoreQuantPersistenceEf2();
+        services.AddMySqlDbContext<CoreQuantDbContext>(endpoint =>
         {
             ApplyConnectionString(endpoint, ConnectionString);
             endpoint.CommandTimeout = TimeSpan.FromSeconds(30);
@@ -52,7 +52,7 @@ public sealed class MySqlFixture : IAsyncLifetime
 
         Provider = services.BuildServiceProvider();
         await using var scope = Provider.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<CoreQuantWriteDbContext>();
+        var db = scope.ServiceProvider.GetRequiredService<CoreQuantDbContext>();
         await db.Database.EnsureDeletedAsync();
         await db.Database.EnsureCreatedAsync();
     }
@@ -63,7 +63,7 @@ public sealed class MySqlFixture : IAsyncLifetime
         if (Provider is not null)
         {
             await using var scope = Provider.CreateAsyncScope();
-            var db = scope.ServiceProvider.GetRequiredService<CoreQuantWriteDbContext>();
+            var db = scope.ServiceProvider.GetRequiredService<CoreQuantDbContext>();
             await db.Database.EnsureDeletedAsync();
             await Provider.DisposeAsync();
         }

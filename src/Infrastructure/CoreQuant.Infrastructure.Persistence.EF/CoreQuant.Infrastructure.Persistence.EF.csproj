@@ -9,7 +9,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.12" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="10.0.12" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
@@ -18,7 +17,6 @@
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.12" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.12" />
     <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.12" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +26,25 @@
     <ProjectReference Include="..\..\Common\Infrastructure\Common.Infrastructure.Persistence.EF\Common.Infrastructure.Persistence.EF.csproj" />
     <ProjectReference Include="..\..\Framework\CoreQuant.Framework\CoreQuant.Framework.csproj" />
     <ProjectReference Include="..\CoreQuant.Infrastructure\CoreQuant.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DbContexts\Core\Configurations\" />
+    <Folder Include="DbContexts\Core\Repositories\" />
+    <Folder Include="DbContexts\Markets\Commodity\Configurations\" />
+    <Folder Include="DbContexts\Markets\Commodity\Repositories\" />
+    <Folder Include="DbContexts\Markets\Crypto\Configurations\" />
+    <Folder Include="DbContexts\Markets\Crypto\Repositories\" />
+    <Folder Include="DbContexts\Markets\Forex\Configurations\" />
+    <Folder Include="DbContexts\Markets\Forex\Repositories\" />
+    <Folder Include="DbContexts\Markets\Indices\Configurations\" />
+    <Folder Include="DbContexts\Markets\Indices\Repositories\" />
+    <Folder Include="DbContexts\Markets\Metals\Configurations\" />
+    <Folder Include="DbContexts\Markets\Metals\Repositories\" />
+    <Folder Include="DbContexts\Markets\Stocks\Configurations\" />
+    <Folder Include="DbContexts\Markets\Stocks\Repositories\" />
+    <Folder Include="DbContexts\News\Configurations\" />
+    <Folder Include="DbContexts\News\Repositories\" />
   </ItemGroup>
 
 </Project>

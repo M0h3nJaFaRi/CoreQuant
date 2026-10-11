@@ -12,10 +12,7 @@ public static class Ensure
     /// </summary>
     public static void That(bool condition, string message, string code)
     {
-        if (!condition)
-        {
-            throw new DomainException(message, code);
-        }
+        if (!condition) throw new DomainException(message, code);
     }
 
     /// <summary>
@@ -25,9 +22,7 @@ public static class Ensure
     where T : class
     {
         if (value is null)
-        {
-            throw new DomainException(message, code);
-        }
+            throw new NotNullException(message, code);
 
         return value;
     }
@@ -38,9 +33,7 @@ public static class Ensure
     public static string NotEmpty(string? value, string message, string code = "not_empty")
     {
         if (string.IsNullOrWhiteSpace(value))
-        {
-            throw new DomainException(message, code);
-        }
+            throw new NotEmptyException(message, code);
 
         return value;
     }
@@ -52,9 +45,7 @@ public static class Ensure
     where T : class
     {
         if (value is null)
-        {
             throw new NotFoundException(message, code);
-        }
 
         return value;
     }
