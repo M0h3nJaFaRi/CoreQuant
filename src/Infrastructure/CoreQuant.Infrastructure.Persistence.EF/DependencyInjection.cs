@@ -1,8 +1,9 @@
-using System.Reflection;
+using Common.Framework.HealthChecks;
 using Common.Infrastructure.Persistence.EF.DbContexts;
 using Common.Infrastructure.Persistence.EF.UnitOfWork;
 using CoreQuant.Infrastructure.Persistence.EF.Configuration;
 using CoreQuant.Infrastructure.Persistence.EF.Configuration.Options;
+using CoreQuant.Infrastructure.Persistence.EF.Configuration.Validators;
 using CoreQuant.Infrastructure.Persistence.EF.DbContexts.Core;
 using CoreQuant.Infrastructure.Persistence.EF.DbContexts.Markets.Commodity;
 using CoreQuant.Infrastructure.Persistence.EF.DbContexts.Markets.Crypto;
@@ -11,16 +12,22 @@ using CoreQuant.Infrastructure.Persistence.EF.DbContexts.Markets.Indices;
 using CoreQuant.Infrastructure.Persistence.EF.DbContexts.Markets.Metals;
 using CoreQuant.Infrastructure.Persistence.EF.DbContexts.Markets.Stocks;
 using CoreQuant.Infrastructure.Persistence.EF.DbContexts.News;
-using CoreQuant.Infrastructure.Persistence.EF.Configuration.Validators;
+using CoreQuant.Infrastructure.Persistence.EF.Health;
 using CoreQuant.Infrastructure.Persistence.EF.Interceptors;
+using CoreQuant.Infrastructure.Persistence.EF.Interceptors.Observability;
 using CoreQuant.Infrastructure.Persistence.EF.Observability;
 using CoreQuant.Infrastructure.Persistence.EF.UnitOfWorks;
+using Framework;
+using Framework.Configurations.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
-using CoreQuant.Infrastructure.Persistence.EF.Interceptors.Observability;
+using System.Net.Mime;
+using System.Reflection;
+using System.Xml.Linq;
 
 namespace CoreQuant.Infrastructure.Persistence.EF;
 
@@ -41,6 +48,39 @@ public static class DependencyInjection
                        .AddCoreQuantUnitOfWork(configuration)
                        .AddCoreQuantPersistenceObservability(configuration);
     }
+    public static IHealthChecksBuilder RegisterEfDatabaseCheck(this IHealthChecksBuilder builder, IConfiguration configuration, params string[] databases)
+    {
+        var databaseOptions = configuration.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>() ?? [];
+
+        var registrations = databases.Length == 0 ? 
+                            CoreQuantDbContextRegistration.All : 
+                            [.. CoreQuantDbContextRegistration.All.Where(r => databases.Contains(r.ConfigurationKey, StringComparer.OrdinalIgnoreCase))];
+
+        if (databases.Length > 0)
+        {
+            var unknown = databases.Except(CoreQuantDbContextRegistration.All.Select(r => r.ConfigurationKey), StringComparer.OrdinalIgnoreCase).ToList();
+
+            if (unknown.Count > 0)
+                throw new ArgumentException($"Unknown database key(s): {string.Join(", ", unknown)}.", nameof(databases));
+        }
+
+        foreach (var registration in registrations)
+        {
+            if (!databaseOptions.TryGetValue(registration.ConfigurationKey, out var endpoint))
+                throw new InvalidOperationException($"Missing database configuration '{registration.ConfigurationKey}' at {DatabaseOptions.SectionName}:{registration.ConfigurationKey}.");
+
+            if (!endpoint.IsConfigured) continue;
+
+            if (!typeof(DbContext).IsAssignableFrom(registration.ContextType))
+                throw new ArgumentException($"'{registration.ContextType.Name}' is not a DbContext.", nameof(registration.ContextType));
+
+            builder.AddDependencyHealthCheck(name: $"{registration.ConfigurationKey.ToLowerInvariant()}-db", 
+                                             options: endpoint.Health, kindTag: HealthTags.Db, 
+                                             factory: sp => new EfDatabaseHealthCheck(sp.GetRequiredService<IServiceScopeFactory>(), registration.ContextType, endpoint.Health));
+        }
+
+        return builder;
+    }
 
     internal static IServiceCollection AddCoreQuantUnitOfWork(this IServiceCollection services, IConfiguration configuration)
     {
@@ -59,7 +99,6 @@ public static class DependencyInjection
 
         return services;
     }
-
     internal static IServiceCollection AddCoreQuantDbContext(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IValidateOptions<DatabaseOptions>, DatabaseOptionsValidator>();
@@ -75,7 +114,6 @@ public static class DependencyInjection
 
         return services;
     }
-
     internal static IServiceCollection AddCoreQuantInterceptor(this IServiceCollection services, IConfiguration configuration)
     {
         services.TryAddSingleton<IValidateOptions<SlowQueryInterceptorOptions>, SlowQueryInterceptorOptionsValidator>();
@@ -91,14 +129,12 @@ public static class DependencyInjection
 
         return services;
     }
-
     internal static IServiceCollection AddCoreQuantPersistenceObservability(this IServiceCollection services, IConfiguration configuration)
     {
         services.TryAddSingleton<EfMetrics>();
 
         return services;
     }
-
     private static void RegisterMySqlDbContext(IServiceCollection services, DatabaseOptions databaseOptions, CoreQuantDbContextRegistration.DbContextRegistration registration)
     {
         if (!databaseOptions.TryGetValue(registration.ConfigurationKey, out var endpoint))
@@ -109,7 +145,6 @@ public static class DependencyInjection
 
         addMethod.Invoke(null, [services, endpoint]);
     }
-
     private static IServiceCollection AddMySqlDbContext<TContext>(this IServiceCollection services, DatabaseEndpointOptions endpoint)
     where TContext : BaseDbContext
     {

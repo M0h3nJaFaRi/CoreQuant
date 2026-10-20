@@ -1,7 +1,5 @@
-﻿using Serilog;
-using System.Diagnostics;
-using System.Diagnostics.Metrics;
-using System.Reflection;
+﻿using Common.Framework.HealthChecks;
+using Common.Presentation.Contract;
 using FluentValidation;
 using Framework.Infrastructure.Time;
 using Framework.Observability.Configuration.Options;
@@ -18,7 +16,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
-using Common.Presentation.Contract;
+using Serilog;
+using System.Diagnostics;
+using System.Diagnostics.Metrics;
+using System.Reflection;
 
 namespace Framework;
 
@@ -41,6 +42,15 @@ public static class DependencyInjection
                 .RegisterValidation(configuration, validationAssemblies);
 
         return services;
+    }
+    public static IHealthChecksBuilder AddServiceHealth(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSingleton(sp =>
+        {
+            var identity = sp.GetRequiredService<ServiceIdentity>();
+            return new ServiceHealthInfo(identity.Component);
+        });
+        return services.AddHealthChecks();
     }
 
     private static IServiceCollection RegisterInfrastructure(this IServiceCollection services, IConfiguration configuration)

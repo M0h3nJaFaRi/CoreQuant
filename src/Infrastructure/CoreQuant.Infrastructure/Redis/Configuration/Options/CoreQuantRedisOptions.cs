@@ -1,3 +1,4 @@
+using Framework.Configurations.Options;
 using StackExchange.Redis;
 
 namespace CoreQuant.Infrastructure.Redis.Configuration.Options;
@@ -81,7 +82,7 @@ public sealed record CoreQuantRedisOptions
     /// <summary>
     /// Readiness health probe settings.
     /// </summary>
-    public RedisHealthOptions Health { get; init; } = new();
+    public DependencyHealthOptions Health { get; init; } = new();
 
     /// <summary>
     /// Builds StackExchange.Redis <see cref="ConfigurationOptions"/> from these fields.

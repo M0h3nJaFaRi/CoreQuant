@@ -1,3 +1,5 @@
+using Framework.Configurations.Options;
+
 namespace CoreQuant.Infrastructure.Persistence.EF.Configuration.Options;
 
 /// <summary>
@@ -34,6 +36,11 @@ public record DatabaseEndpointOptions
     /// Optional command timeout.
     /// </summary>
     public TimeSpan? CommandTimeout { get; init; }
+
+    /// <summary>
+    /// Health check settings for this database.
+    /// </summary>
+    public DependencyHealthOptions Health { get; init; } = new();
 
     /// <summary>
     /// True when host and database name are present.

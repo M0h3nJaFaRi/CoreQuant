@@ -52,8 +52,6 @@ internal static class RedisServiceCollectionExtensions
         services.AddSingleton<IRedisEventStore, RedisEventStore>();
         services.AddSingleton<IRedisQueue, RedisQueue>();
 
-        services.AddHealthChecks().AddCheck<RedisHealthCheck>("redis", failureStatus: HealthStatus.Unhealthy, tags: ["ready"]);
-
         return services;
     }
 }

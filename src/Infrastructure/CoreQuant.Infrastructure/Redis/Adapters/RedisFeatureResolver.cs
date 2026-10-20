@@ -1,6 +1,6 @@
 using CoreQuant.Infrastructure.Redis.Configuration.Options;
 
-namespace CoreQuant.Infrastructure.Redis.Observability;
+namespace CoreQuant.Infrastructure.Redis.Adapters;
 
 /// <summary>
 /// Maps a Redis logical database index to a stable feature label for metrics.

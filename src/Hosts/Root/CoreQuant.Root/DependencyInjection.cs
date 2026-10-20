@@ -18,46 +18,70 @@ public static class DependencyInjection
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        return services.AddServiceIdentity(configuration, assembly, "CoreQuant", "Api")
-                       .AddFramework(configuration, typeof(Application.AssemblyMarker).Assembly)
-                       .AddApplication(configuration)
-                       .AddInfrastructure(configuration)
-                       .AddInfrastructureEf(configuration)
-                       .AddAcl(configuration)
-                       .AddDomain(configuration);
+        services.AddServiceIdentity(configuration, assembly, "CoreQuant", "Api")
+                .AddFramework(configuration, typeof(Application.AssemblyMarker).Assembly)
+                .AddApplication(configuration)
+                .AddInfrastructure(configuration)
+                .AddInfrastructureEf(configuration)
+                .AddAcl(configuration)
+                .AddDomain(configuration);
+
+        services.AddServiceHealth(configuration)
+                .RegisterEfDatabaseCheck(configuration)
+                .RegisterRedisHealthCheck(configuration);
+
+        return services;
     }
     public static IServiceCollection AddConsumerDependency(this IServiceCollection services, IConfiguration configuration, Assembly assembly)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        return services.AddServiceIdentity(configuration, assembly, "CoreQuant", "Consumer")
-                       .AddFramework(configuration, typeof(Application.AssemblyMarker).Assembly)
-                       .AddApplication(configuration)
-                       .AddInfrastructure(configuration)
-                       .AddDomain(configuration);
+        services.AddServiceIdentity(configuration, assembly, "CoreQuant", "Consumer")
+                .AddFramework(configuration, typeof(Application.AssemblyMarker).Assembly)
+                .AddApplication(configuration)
+                .AddInfrastructure(configuration)
+                .AddDomain(configuration);
+
+        services.AddServiceHealth(configuration)
+                .RegisterEfDatabaseCheck(configuration)
+                .RegisterRedisHealthCheck(configuration);
+
+        return services;
     }
     public static IServiceCollection AddSchedulerDependency(this IServiceCollection services, IConfiguration configuration, Assembly assembly)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        return services.AddServiceIdentity(configuration, assembly, "CoreQuant", "Scheduler")
-                       .AddFramework(configuration, typeof(Application.AssemblyMarker).Assembly)
-                       .AddApplication(configuration)
-                       .AddInfrastructure(configuration)
-                       .AddDomain(configuration);
+        services.AddServiceIdentity(configuration, assembly, "CoreQuant", "Scheduler")
+                .AddFramework(configuration, typeof(Application.AssemblyMarker).Assembly)
+                .AddApplication(configuration)
+                .AddInfrastructure(configuration)
+                .AddDomain(configuration);
+
+        services.AddServiceHealth(configuration)
+                .RegisterEfDatabaseCheck(configuration)
+                .RegisterRedisHealthCheck(configuration);
+
+        return services;
     }
     public static IServiceCollection AddWorkerDependency(this IServiceCollection services, IConfiguration configuration, Assembly assembly)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(configuration);
 
-        return services.AddServiceIdentity(configuration, assembly, "CoreQuant", "Worker")
-                       .AddFramework(configuration, typeof(Application.AssemblyMarker).Assembly)
-                       .AddApplication(configuration)
-                       .AddInfrastructure(configuration)
-                       .AddDomain(configuration);
+        services.AddServiceIdentity(configuration, assembly, "CoreQuant", "Worker")
+                .AddFramework(configuration, typeof(Application.AssemblyMarker).Assembly)
+                .AddApplication(configuration)
+                .AddInfrastructure(configuration)
+                .AddDomain(configuration);
+
+        services.AddServiceHealth(configuration)
+                .RegisterEfDatabaseCheck(configuration)
+                .RegisterRedisHealthCheck(configuration);
+
+        return services;
     }
 
     public static IServiceProvider ValidateAssembly(this IServiceProvider serviceProvider)

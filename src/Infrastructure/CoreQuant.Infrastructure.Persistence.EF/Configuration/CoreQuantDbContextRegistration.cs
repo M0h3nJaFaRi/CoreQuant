@@ -13,9 +13,9 @@ namespace CoreQuant.Infrastructure.Persistence.EF.Configuration;
 /// <summary>
 /// Maps each CoreQuant EF context to its <see cref="Configuration.Options.DatabaseOptions"/> key.
 /// </summary>
-internal static class CoreQuantDbContextRegistration
+public static class CoreQuantDbContextRegistration
 {
-    internal static readonly IReadOnlyList<DbContextRegistration> All =
+    public static readonly IReadOnlyList<DbContextRegistration> All =
     [
         new(typeof(NewsDbContext), "News"),
         new(typeof(ForexDbContext), "Forex"),
@@ -27,5 +27,5 @@ internal static class CoreQuantDbContextRegistration
         new(typeof(CommodityDbContext), "Commodity"),
     ];
 
-    internal sealed record DbContextRegistration(Type ContextType, string ConfigurationKey);
+    public sealed record DbContextRegistration(Type ContextType, string ConfigurationKey);
 }

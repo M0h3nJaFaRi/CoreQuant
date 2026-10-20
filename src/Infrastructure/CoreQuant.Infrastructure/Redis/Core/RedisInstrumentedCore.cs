@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using CoreQuant.Infrastructure.Redis.Adapters;
 using CoreQuant.Infrastructure.Redis.Configuration.Options;
 using CoreQuant.Infrastructure.Redis.Core.Contract;
 using CoreQuant.Infrastructure.Redis.Observability;
