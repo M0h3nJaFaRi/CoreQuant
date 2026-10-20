@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Application\CoreQuant.Application\CoreQuant.Application.csproj" />
+    <ProjectReference Include="..\..\Common\Common.Presentation\Common.Presentation.csproj" />
+    <ProjectReference Include="..\..\Domain\CoreQuant.Domain\CoreQuant.Domain.csproj" />
+    <ProjectReference Include="..\..\Framework\CoreQuant.Framework\CoreQuant.Framework.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\CoreQuant.Infrastructure.Acl\CoreQuant.Infrastructure.Acl.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\CoreQuant.Infrastructure.Persistence.EF\CoreQuant.Infrastructure.Persistence.EF.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\CoreQuant.Infrastructure\CoreQuant.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

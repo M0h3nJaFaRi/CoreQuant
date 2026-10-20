@@ -27,6 +27,23 @@ where TId : notnull
     public IReadOnlyCollection<IDomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
     /// <summary>
+    /// Clears pending domain events after they have been dispatched.
+    /// </summary>
+    public void ClearDomainEvents() => _domainEvents.Clear();
+
+    /// <summary>
+    /// Raised domain events awaiting dispatch and clears pending events.
+    /// </summary>
+    public IReadOnlyCollection<IDomainEvent> DequeueDomainEvents()
+    {
+        var events = _domainEvents.ToArray();
+        
+        _domainEvents.Clear();
+
+        return events;
+    }
+
+    /// <summary>
     /// Raises a domain event on this aggregate.
     /// </summary>
     protected void RaiseDomainEvent(IDomainEvent domainEvent)
@@ -34,9 +51,4 @@ where TId : notnull
         ArgumentNullException.ThrowIfNull(domainEvent);
         _domainEvents.Add(domainEvent);
     }
-
-    /// <summary>
-    /// Clears pending domain events after they have been dispatched.
-    /// </summary>
-    public void ClearDomainEvents() => _domainEvents.Clear();
 }

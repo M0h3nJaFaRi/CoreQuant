@@ -1,24 +1,10 @@
-using Common.Worker;
-using CoreQuant.Infrastructure;
-using CoreQuant.Infrastructure.Persistence.EF;
-using Framework;
+using CoreQuant.Root;
 
 var builder = Host.CreateApplicationBuilder(args);
-
-var applicationName = builder.Configuration["ApplicationName"] ?? "CoreQuant.Worker";
-
-builder.Services.AddFramework(
-    builder.Configuration,
-    applicationName,
-    typeof(CoreQuant.Application.AssemblyMarker).Assembly);
-
-builder.Services.AddCommonWorker(
-    "CoreQuant.Worker",
-    builder.Configuration,
-    typeof(CoreQuant.Application.AssemblyMarker).Assembly);
-
-builder.Services.AddCoreQuantInfrastructure(builder.Configuration);
-builder.Services.AddCoreQuantPersistenceEf(builder.Configuration);
+builder.Services.AddWorkerDependency(builder.Configuration, typeof(CoreQuant.Worker.AssemblyMarker).Assembly);
 
 var host = builder.Build();
+
+host.Services.ValidateAssembly();
+
 host.Run();

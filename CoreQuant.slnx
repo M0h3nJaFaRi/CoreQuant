@@ -109,72 +109,69 @@
   </Folder>
   <Folder Name="/src/" />
   <Folder Name="/src/Application/">
-    <Project Path="src/Application/CoreQuant.Application.Contracts/CoreQuant.Application.Contracts.csproj" />
-    <Project Path="src/Application/CoreQuant.Application/CoreQuant.Application.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Application/CoreQuant.Application.Contracts/CoreQuant.Application.Contracts.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Application/CoreQuant.Application/CoreQuant.Application.csproj" />
   </Folder>
   <Folder Name="/src/Common/">
-    <Project Path="src/Common/Common.Application/Common.Application.csproj" />
-    <Project Path="src/Common/Common.Domain/Common.Domain.csproj" />
-    <Project Path="src/Common/Common.Framework/Common.Framework.csproj" />
-  </Folder>
-  <Folder Name="/src/Common/Hosts/">
-    <Project Path="src/Common/Hosts/Common.Api/Common.Api.csproj" />
-    <Project Path="src/Common/Hosts/Common.Consumer/Common.Consumer.csproj" />
-    <Project Path="src/Common/Hosts/Common.Scheduler/Common.Scheduler.csproj" />
-    <Project Path="src/Common/Hosts/Common.Worker/Common.Worker.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Common/Common.Application/Common.Application.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Common/Common.Domain/Common.Domain.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Common/Common.Framework/Common.Framework.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Common/Common.Presentation/Common.Presentation.csproj" />
   </Folder>
   <Folder Name="/src/Common/Infrastructure/">
-    <Project Path="src/Common/Infrastructure/Common.Infrastructure.Persistence.EF/Common.Infrastructure.Persistence.EF.csproj" />
-    <Project Path="src/Common/Infrastructure/Common.Infrastructure.Persistence/Common.Infrastructure.Persistence.csproj" />
-    <Project Path="src/Common/Infrastructure/Common.Infrastructure/Common.Infrastructure.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Common/Infrastructure/Common.Infrastructure.Persistence.EF/Common.Infrastructure.Persistence.EF.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Common/Infrastructure/Common.Infrastructure.Persistence/Common.Infrastructure.Persistence.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Common/Infrastructure/Common.Infrastructure/Common.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/Domain/">
-    <Project Path="src/Domain/CoreQuant.Domain/CoreQuant.Domain.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Domain/CoreQuant.Domain/CoreQuant.Domain.csproj" />
   </Folder>
   <Folder Name="/src/Framework/">
-    <Project Path="src/Framework/CoreQuant.Framework/CoreQuant.Framework.csproj" />
-  </Folder>
-  <Folder Name="/src/Hosts/" />
-  <Folder Name="/src/Hosts/Api/">
-    <Project Path="src/Hosts/Api/CoreQuant.Api/CoreQuant.Api.csproj" />
-  </Folder>
-  <Folder Name="/src/Hosts/Consumer/">
-    <Project Path="src/Hosts/Consumer/CoreQuant.Consumer/CoreQuant.Consumer.csproj" />
-  </Folder>
-  <Folder Name="/src/Hosts/Scheduler/">
-    <Project Path="src/Hosts/Scheduler/CoreQuant.Scheduler/CoreQuant.Scheduler.csproj" />
-  </Folder>
-  <Folder Name="/src/Hosts/Worker/">
-    <Project Path="src/Hosts/Worker/CoreQuant.Worker/CoreQuant.Worker.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Framework/CoreQuant.Framework/CoreQuant.Framework.csproj" />
   </Folder>
   <Folder Name="/src/Infrastructure/">
-    <Project Path="src/Infrastructure/CoreQuant.Infrastructure.Acl/CoreQuant.Infrastructure.Acl.csproj" />
-    <Project Path="src/Infrastructure/CoreQuant.Infrastructure.Persistence.EF/CoreQuant.Infrastructure.Persistence.EF.csproj" />
-    <Project Path="src/Infrastructure/CoreQuant.Infrastructure/CoreQuant.Infrastructure.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Infrastructure/CoreQuant.Infrastructure.Acl/CoreQuant.Infrastructure.Acl.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Infrastructure/CoreQuant.Infrastructure.Persistence.EF/CoreQuant.Infrastructure.Persistence.EF.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Infrastructure/CoreQuant.Infrastructure/CoreQuant.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentations/">
+    <Project Path="src/Hosts/Root/CoreQuant.Root/CoreQuant.Root.csproj" Id="344de2c9-17ea-4f85-a954-e31c43abdbd9" />
+  </Folder>
+  <Folder Name="/src/Presentations/Api/">
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Hosts/Api/CoreQuant.Api/CoreQuant.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentations/Consumer/">
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Hosts/Consumer/CoreQuant.Consumer/CoreQuant.Consumer.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentations/Scheduler/">
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Hosts/Scheduler/CoreQuant.Scheduler/CoreQuant.Scheduler.csproj" />
+  </Folder>
+  <Folder Name="/src/Presentations/Worker/">
+    <Project Path="D:/Sources/Personal/ServiceFoundation/src/Hosts/Worker/CoreQuant.Worker/CoreQuant.Worker.csproj" />
   </Folder>
   <Folder Name="/tests/" />
   <Folder Name="/tests/IntegrationTests/">
-    <Project Path="tests/IntegrationTests/Api/CoreQuant.Api.IntegrationTests/CoreQuant.Api.IntegrationTests.csproj" />
-    <Project Path="tests/IntegrationTests/Consumer/CoreQuant.Consumer.IntegrationTests/CoreQuant.Consumer.IntegrationTests.csproj" />
-    <Project Path="tests/IntegrationTests/Scheduler/CoreQuant.Scheduler.IntegrationTests/CoreQuant.Scheduler.IntegrationTests.csproj" />
-    <Project Path="tests/IntegrationTests/Worker/CoreQuant.Worker.IntegrationTests/CoreQuant.Worker.IntegrationTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/IntegrationTests/Api/CoreQuant.Api.IntegrationTests/CoreQuant.Api.IntegrationTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/IntegrationTests/Consumer/CoreQuant.Consumer.IntegrationTests/CoreQuant.Consumer.IntegrationTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/IntegrationTests/Scheduler/CoreQuant.Scheduler.IntegrationTests/CoreQuant.Scheduler.IntegrationTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/IntegrationTests/Worker/CoreQuant.Worker.IntegrationTests/CoreQuant.Worker.IntegrationTests.csproj" />
   </Folder>
   <Folder Name="/tests/UnitTests/" />
   <Folder Name="/tests/UnitTests/Framework/">
-    <Project Path="tests/UnitTests/CoreQuant.Framework.UnitTests/CoreQuant.Framework.UnitTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/UnitTests/CoreQuant.Framework.UnitTests/CoreQuant.Framework.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tests/UnitTests/Hosts/">
-    <Project Path="tests/UnitTests/CoreQuant.Api.UnitTests/CoreQuant.Api.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/CoreQuant.Consumer.UnitTests/CoreQuant.Consumer.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/CoreQuant.Scheduler.UnitTests/CoreQuant.Scheduler.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/CoreQuant.Worker.UnitTests/CoreQuant.Worker.UnitTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/UnitTests/CoreQuant.Api.UnitTests/CoreQuant.Api.UnitTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/UnitTests/CoreQuant.Consumer.UnitTests/CoreQuant.Consumer.UnitTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/UnitTests/CoreQuant.Scheduler.UnitTests/CoreQuant.Scheduler.UnitTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/UnitTests/CoreQuant.Worker.UnitTests/CoreQuant.Worker.UnitTests.csproj" />
   </Folder>
   <Folder Name="/tests/UnitTests/Src/">
-    <Project Path="tests/UnitTests/CoreQuant.Application.UnitTests/CoreQuant.Application.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/CoreQuant.Commen.UnitTests/CoreQuant.Commen.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/CoreQuant.Domain.UnitTests/CoreQuant.Domain.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/CoreQuant.Infrastructure.Acl.UnitTests/CoreQuant.Infrastructure.Acl.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/CoreQuant.Infrastructure.Persistence.EF.UnitTests/CoreQuant.Infrastructure.Persistence.EF.UnitTests.csproj" />
-    <Project Path="tests/UnitTests/CoreQuant.Infrastructure.UnitTests/CoreQuant.Infrastructure.UnitTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/UnitTests/CoreQuant.Application.UnitTests/CoreQuant.Application.UnitTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/UnitTests/CoreQuant.Commen.UnitTests/CoreQuant.Commen.UnitTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/UnitTests/CoreQuant.Domain.UnitTests/CoreQuant.Domain.UnitTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/UnitTests/CoreQuant.Infrastructure.Acl.UnitTests/CoreQuant.Infrastructure.Acl.UnitTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/UnitTests/CoreQuant.Infrastructure.Persistence.EF.UnitTests/CoreQuant.Infrastructure.Persistence.EF.UnitTests.csproj" />
+    <Project Path="D:/Sources/Personal/ServiceFoundation/tests/UnitTests/CoreQuant.Infrastructure.UnitTests/CoreQuant.Infrastructure.UnitTests.csproj" />
   </Folder>
 </Solution>

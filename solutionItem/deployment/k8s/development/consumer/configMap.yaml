@@ -7,8 +7,9 @@ data:
   # =========================
   # Host
   # =========================
+  ApplicationName: "CoreQuant"
+  ApplicationComponent: "Consumer"
   DOTNET_ENVIRONMENT: "Development"
-  ApplicationName: "CoreQuant.Consumer"
 
   # =========================
   # Serilog

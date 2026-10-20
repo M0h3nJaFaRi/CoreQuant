@@ -14,8 +14,5 @@ public interface IPipelineBehavior<in TRequest, TResponse>
     /// <summary>
     /// Invokes the next behavior or the handler.
     /// </summary>
-    Task<TResponse> Handle(
-        TRequest request,
-        RequestHandlerDelegate<TResponse> next,
-        CancellationToken cancellationToken);
+    Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken);
 }

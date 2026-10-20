@@ -1,4 +1,5 @@
-using Common.Application.Authorization;
+using Common.Application.Authorization.Abstraction;
+using Common.Application.Authorization.Contracts;
 
 namespace Common.Application.Cqrs.Defaults;
 
@@ -8,6 +9,5 @@ namespace Common.Application.Cqrs.Defaults;
 internal sealed class AllowAllAuthorizationService : IAuthorizationService
 {
     /// <inheritdoc />
-    public Task<bool> AuthorizeAsync(Type requestType, CancellationToken cancellationToken = default) =>
-        Task.FromResult(true);
+    public Task<AuthorizationResult> AuthorizeAsync<TRequest>(TRequest request, CancellationToken cancellationToken) => Task.FromResult(AuthorizationResult.Allow());
 }

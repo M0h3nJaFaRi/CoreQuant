@@ -12,7 +12,7 @@ public static class DependencyInjection
     /// <summary>
     /// Registers CoreQuant infrastructure including Redis-backed CQRS adapters.
     /// </summary>
-    public static IServiceCollection AddCoreQuantInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddCoreQuantRedis(configuration);
 

@@ -6,28 +6,25 @@ namespace Common.Application.Cqrs.Pipeline;
 internal static class PipelineOrders
 {
     /// <summary>Outermost: request lifecycle logging.</summary>
-    public const int Logging = 100;
+    public const int Logging = 200;
 
     /// <summary>CQRS metrics.</summary>
-    public const int Metrics = 200;
-
-    /// <summary>Duration measurement and threshold warnings.</summary>
-    public const int Performance = 300;
+    public const int Metrics = 300;
 
     /// <summary>FluentValidation.</summary>
-    public const int Validation = 400;
+    public const int Validation = 500;
 
     /// <summary>Use-case authorization.</summary>
-    public const int Authorization = 500;
-
-    /// <summary>Command idempotency (opt-in).</summary>
-    public const int Idempotency = 600;
-
-    /// <summary>Query caching (opt-in).</summary>
-    public const int Caching = 600;
+    public const int Authorization = 600;
 
     /// <summary>
     /// Per-partition rate limiting (after authorization; before idempotency/caching).
     /// </summary>
-    public const int RateLimit = 550;
+    public const int RateLimit = 700;
+
+    /// <summary>Command idempotency (opt-in).</summary>
+    public const int Idempotency = 800;
+
+    /// <summary>Query caching (opt-in).</summary>
+    public const int Caching = 900;
 }

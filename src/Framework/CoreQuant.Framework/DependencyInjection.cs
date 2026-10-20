@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using Serilog;
+using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Reflection;
 using FluentValidation;
@@ -17,7 +18,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
-using Serilog;
+using Common.Presentation.Contract;
 
 namespace Framework;
 
@@ -29,114 +30,121 @@ public static class DependencyInjection
     /// <summary>
     /// Registers all Framework services. Hosts must call this once; external layers must not register Framework modules directly.
     /// </summary>
-    public static IServiceCollection AddFramework(
-        this IServiceCollection services,
-        IConfiguration configuration,
-        string applicationName,
-        params Assembly[] validationAssemblies)
+    public static IServiceCollection AddFramework(this IServiceCollection services, IConfiguration configuration, params Assembly[] validationAssemblies)
     {
-        ArgumentNullException.ThrowIfNull(services);
-        ArgumentNullException.ThrowIfNull(configuration);
-        ArgumentException.ThrowIfNullOrWhiteSpace(applicationName);
-
-        RegisterInfrastructure(services);
-        RegisterObservability(services, applicationName);
-        RegisterWebObservability(services, configuration);
-        RegisterLogging(services, configuration);
-        RegisterSecurity(services, configuration);
-        RegisterSerialization(services);
-        RegisterValidation(services, validationAssemblies);
+        services.RegisterInfrastructure(configuration)
+                .RegisterObservability(configuration)
+                .RegisterWebObservability(configuration)
+                .RegisterLogging(configuration)
+                .RegisterSecurity(configuration)
+                .RegisterSerialization(configuration)
+                .RegisterValidation(configuration, validationAssemblies);
 
         return services;
     }
 
-    private static void RegisterInfrastructure(IServiceCollection services)
+    private static IServiceCollection RegisterInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.TryAddSingleton<ISystemClock, SystemClock>();
+
+        return services;
     }
-
-    private static void RegisterObservability(IServiceCollection services, string applicationName)
+    private static IServiceCollection RegisterObservability(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddOptions<FrameworkObservabilityOptions>()
-            .Configure(options => options.ServiceName = applicationName)
-            .ValidateOnStart();
-        services.TryAddSingleton<IValidateOptions<FrameworkObservabilityOptions>, FrameworkObservabilityOptionsValidator>();
-
         services.TryAddSingleton(sp =>
         {
-            var options = sp.GetRequiredService<IOptions<FrameworkObservabilityOptions>>().Value;
-            return new ActivitySource(options.ServiceName);
+            var serviceIdentity = sp.GetRequiredService<ServiceIdentity>();
+
+            var tag = new List<KeyValuePair<string, object?>>()
+            {
+                new("namespcae", serviceIdentity.Namespace),
+                new("name", serviceIdentity.Name),
+                new("component", serviceIdentity.Component),
+                new("version", serviceIdentity.Version)
+            };
+
+            return new ActivitySource(name: serviceIdentity.Name, version: serviceIdentity.Version, tags: [.. tag]);
         });
 
         services.TryAddSingleton(sp =>
         {
-            var options = sp.GetRequiredService<IOptions<FrameworkObservabilityOptions>>().Value;
-            return new Meter(options.ServiceName);
+            var serviceIdentity = sp.GetRequiredService<ServiceIdentity>();
+
+            var tag = new List<KeyValuePair<string, object?>>()
+            {
+                new("namespcae", serviceIdentity.Namespace),
+                new("name", serviceIdentity.Name),
+                new("component", serviceIdentity.Component),
+                new("version", serviceIdentity.Version)
+            };
+
+            return new Meter(name: serviceIdentity.Name, version: serviceIdentity.Version, tags: [.. tag]);
         });
 
-        services.AddHealthChecks()
-            .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"]);
-    }
+        services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"]);
 
-    private static void RegisterWebObservability(IServiceCollection services, IConfiguration configuration)
+        return services;
+    }
+    private static IServiceCollection RegisterWebObservability(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddOptions<FrameworkHealthOptions>()
-            .Bind(configuration.GetSection(FrameworkHealthOptions.SectionName));
+        services.AddOptions<FrameworkHealthOptions>().Bind(configuration.GetSection(FrameworkHealthOptions.SectionName));
 
-        services.AddOptions<FrameworkMetricsOptions>()
-            .Bind(configuration.GetSection(FrameworkMetricsOptions.SectionName));
+        services.AddOptions<FrameworkMetricsOptions>().Bind(configuration.GetSection(FrameworkMetricsOptions.SectionName));
+
+        return services;
     }
-
-    private static void RegisterLogging(IServiceCollection services, IConfiguration configuration)
+    private static IServiceCollection RegisterLogging(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<SerilogOptions>()
-            .Bind(configuration.GetSection(SerilogOptions.SectionName))
-            .ValidateOnStart();
+                .Bind(configuration.GetSection(SerilogOptions.SectionName))
+                .ValidateOnStart();
+
         services.TryAddSingleton<IValidateOptions<SerilogOptions>, SerilogOptionsValidator>();
 
         services.AddOptions<SyslogOptions>()
-            .Bind(configuration.GetSection(SyslogOptions.SectionName))
-            .ValidateOnStart();
+                .Bind(configuration.GetSection(SyslogOptions.SectionName))
+                .ValidateOnStart();
+
         services.TryAddSingleton<IValidateOptions<SyslogOptions>, SyslogOptionsValidator>();
 
         services.AddSerilog((serviceProvider, loggerConfiguration) =>
         {
             var serilogOptions = serviceProvider.GetRequiredService<IOptionsMonitor<SerilogOptions>>().CurrentValue;
             var syslogOptions = serviceProvider.GetRequiredService<IOptionsMonitor<SyslogOptions>>().CurrentValue;
-            var observability = serviceProvider.GetRequiredService<IOptionsMonitor<FrameworkObservabilityOptions>>().CurrentValue;
+            var identity = serviceProvider.GetRequiredService<ServiceIdentity>();
 
-            SerilogConfigurationBuilder.Configure(
-                loggerConfiguration,
-                serilogOptions,
-                syslogOptions,
-                observability.ServiceName);
+            SerilogConfigurationBuilder.Configure(loggerConfiguration, serilogOptions, syslogOptions, identity);
         });
-    }
 
-    private static void RegisterSecurity(IServiceCollection services, IConfiguration configuration)
+        return services;
+    }
+    private static IServiceCollection RegisterSecurity(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<EncryptionOptions>()
-            .Bind(configuration.GetSection(EncryptionOptions.SectionName))
-            .ValidateOnStart();
+                .Bind(configuration.GetSection(EncryptionOptions.SectionName))
+                .ValidateOnStart();
+
         services.TryAddSingleton<IValidateOptions<EncryptionOptions>, EncryptionOptionsValidator>();
 
         services.TryAddSingleton<IHashService, HashService>();
         services.TryAddSingleton<IAesEncryptionService, AesEncryptionService>();
         services.TryAddSingleton<IRsaEncryptionService, RsaEncryptionService>();
-    }
 
-    private static void RegisterSerialization(IServiceCollection services)
+        return services;
+    }
+    private static IServiceCollection RegisterSerialization(this IServiceCollection services, IConfiguration configuration)
     {
         services.TryAddSingleton<IJsonSerializer, SystemTextJsonSerializer>();
-    }
 
-    private static void RegisterValidation(IServiceCollection services, Assembly[] validationAssemblies)
+        return services;
+    }
+    private static IServiceCollection RegisterValidation(this IServiceCollection services, IConfiguration configuration, Assembly[] validationAssemblies)
     {
         if (validationAssemblies is not { Length: > 0 })
-        {
-            return;
-        }
+            return services;
 
         services.AddValidatorsFromAssemblies(validationAssemblies, includeInternalTypes: true);
+
+        return services;
     }
 }

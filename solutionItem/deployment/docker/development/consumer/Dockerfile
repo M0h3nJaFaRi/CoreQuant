@@ -27,7 +27,7 @@ RUN if [ -z "$ASPNETCORE_ENVIRONMENT" ]; then \
 COPY ["src/Hosts/Consumer/CoreQuant.Consumer/CoreQuant.Consumer.csproj", "src/Hosts/Consumer/CoreQuant.Consumer/"]
 
 # Common Host
-COPY ["src/Common/Hosts/Common.Consumer/Common.Consumer.csproj", "src/Common/Hosts/Common.Consumer/"]
+COPY ["src/Common/Common.Presentation/Common.Presentation.csproj", "src/Common/Common.Presentation/"]
 
 # Application Layer
 COPY ["src/Application/CoreQuant.Application/CoreQuant.Application.csproj", "src/Application/CoreQuant.Application/"]

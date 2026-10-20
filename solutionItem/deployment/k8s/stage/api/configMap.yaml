@@ -8,7 +8,8 @@ data:
   # Host
   # =========================
   ASPNETCORE_ENVIRONMENT: "Staging"
-  ApplicationName: "CoreQuant.Api"
+  ApplicationName: "CoreQuant"
+  ApplicationComponent: "Api"
   AllowedHosts: "*"
 
   # =========================

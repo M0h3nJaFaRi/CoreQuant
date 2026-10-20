@@ -6,7 +6,8 @@
       "dotnetRunMessages": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ApplicationName": "CoreQuant.Consumer",
+        "ApplicationName": "CoreQuant",
+        "ApplicationComponent": "Consumer",
         "DOTNET_ENVIRONMENT": "Development",
         "Framework__Encryption__AES__IV": "",
         "Framework__Encryption__AES__Key": "",
@@ -87,7 +88,8 @@
       "dotnetRunMessages": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Staging",
-        "ApplicationName": "CoreQuant.Consumer",
+        "ApplicationName": "CoreQuant",
+        "ApplicationComponent": "Consumer",
         "DOTNET_ENVIRONMENT": "Staging",
         "Framework__Encryption__AES__IV": "",
         "Framework__Encryption__AES__Key": "",

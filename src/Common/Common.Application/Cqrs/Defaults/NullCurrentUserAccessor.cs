@@ -1,4 +1,4 @@
-using Common.Application.Authorization;
+using Common.Application.Authorization.Abstraction;
 
 namespace Common.Application.Cqrs.Defaults;
 
@@ -8,5 +8,5 @@ namespace Common.Application.Cqrs.Defaults;
 internal sealed class NullCurrentUserAccessor : ICurrentUserAccessor
 {
     /// <inheritdoc />
-    public long? UserId => null;
+    public Guid? UserId => null;
 }

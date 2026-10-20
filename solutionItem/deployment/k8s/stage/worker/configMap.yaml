@@ -8,7 +8,8 @@ data:
   # Host
   # =========================
   DOTNET_ENVIRONMENT: "Staging"
-  ApplicationName: "CoreQuant.Worker"
+  ApplicationName: "CoreQuant"
+  ApplicationComponent: "Worker"
 
   # =========================
   # Serilog

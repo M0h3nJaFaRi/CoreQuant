@@ -20,6 +20,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
+using CoreQuant.Infrastructure.Persistence.EF.Interceptors.Observability;
 
 namespace CoreQuant.Infrastructure.Persistence.EF;
 
@@ -33,7 +34,7 @@ public static class DependencyInjection
     /// <summary>
     /// Registers EF persistence, SlowQuery options, MySQL DbContexts from <c>Infrastructure:Databases</c>.
     /// </summary>
-    public static IServiceCollection AddCoreQuantPersistenceEf(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructureEf(this IServiceCollection services, IConfiguration configuration)
     {
         return services.AddCoreQuantInterceptor(configuration)
                        .AddCoreQuantDbContext(configuration)
@@ -83,18 +84,17 @@ public static class DependencyInjection
                 .Bind(configuration.GetSection(SlowQueryInterceptorOptions.SectionName))
                 .ValidateOnStart();
 
-        services.TryAddSingleton<CommandInterceptor>();
-        services.TryAddSingleton<MetricsInterceptor>();
-        services.TryAddSingleton<SlowQueryInterceptor>();
-        services.TryAddSingleton<ConnectionInterceptor>();
-        services.TryAddSingleton<TransactionInterceptor>();
+        services.TryAddSingleton<SaveChangesMetricsInterceptor>();
+        services.TryAddSingleton<CommandObservabilityInterceptor>();
+        services.TryAddSingleton<ConnectionObservabilityInterceptor>();
+        services.TryAddSingleton<TransactionObservabilityInterceptor>();
 
         return services;
     }
 
     internal static IServiceCollection AddCoreQuantPersistenceObservability(this IServiceCollection services, IConfiguration configuration)
     {
-        services.TryAddSingleton<EfPersistenceMetrics>();
+        services.TryAddSingleton<EfMetrics>();
 
         return services;
     }
@@ -121,16 +121,13 @@ public static class DependencyInjection
             options.UseMySql(connectionString, DefaultServerVersion, builder =>
             {
                 if (endpoint.CommandTimeoutSeconds is { } timeout)
-                {
                     builder.CommandTimeout(timeout);
-                }
             });
 
-            options.AddInterceptors(sp.GetRequiredService<CommandInterceptor>());
-            options.AddInterceptors(sp.GetRequiredService<MetricsInterceptor>());
-            options.AddInterceptors(sp.GetRequiredService<SlowQueryInterceptor>());
-            options.AddInterceptors(sp.GetRequiredService<ConnectionInterceptor>());
-            options.AddInterceptors(sp.GetRequiredService<TransactionInterceptor>());
+            options.AddInterceptors(sp.GetRequiredService<SaveChangesMetricsInterceptor>());
+            options.AddInterceptors(sp.GetRequiredService<CommandObservabilityInterceptor>());
+            options.AddInterceptors(sp.GetRequiredService<ConnectionObservabilityInterceptor>());
+            options.AddInterceptors(sp.GetRequiredService<TransactionObservabilityInterceptor>());
         });
 
         return services;

@@ -1,22 +1,10 @@
-using Common.Consumer;
-using CoreQuant.Infrastructure;
-using Framework;
+using CoreQuant.Root;
 
 var builder = Host.CreateApplicationBuilder(args);
-
-var applicationName = builder.Configuration["ApplicationName"] ?? "CoreQuant.Consumer";
-
-builder.Services.AddFramework(
-    builder.Configuration,
-    applicationName,
-    typeof(CoreQuant.Application.AssemblyMarker).Assembly);
-
-builder.Services.AddCommonConsumer(
-    "CoreQuant.Consumer",
-    builder.Configuration,
-    typeof(CoreQuant.Application.AssemblyMarker).Assembly);
-
-builder.Services.AddCoreQuantInfrastructure(builder.Configuration);
+builder.Services.AddConsumerDependency(builder.Configuration, typeof(CoreQuant.Consumer.AssemblyMarker).Assembly);
 
 var host = builder.Build();
+
+host.Services.ValidateAssembly();
+
 host.Run();

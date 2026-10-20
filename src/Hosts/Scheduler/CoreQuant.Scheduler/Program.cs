@@ -1,24 +1,10 @@
-using Common.Scheduler;
-using CoreQuant.Infrastructure;
-using CoreQuant.Infrastructure.Persistence.EF;
-using Framework;
+using CoreQuant.Root;
 
 var builder = Host.CreateApplicationBuilder(args);
-
-var applicationName = builder.Configuration["ApplicationName"] ?? "CoreQuant.Scheduler";
-
-builder.Services.AddFramework(
-    builder.Configuration,
-    applicationName,
-    typeof(CoreQuant.Application.AssemblyMarker).Assembly);
-
-builder.Services.AddCommonScheduler(
-    "CoreQuant.Scheduler",
-    builder.Configuration,
-    typeof(CoreQuant.Application.AssemblyMarker).Assembly);
-
-builder.Services.AddCoreQuantInfrastructure(builder.Configuration);
-builder.Services.AddCoreQuantPersistenceEf(builder.Configuration);
+builder.Services.AddSchedulerDependency(builder.Configuration, typeof(CoreQuant.Scheduler.AssemblyMarker).Assembly);
 
 var host = builder.Build();
+
+host.Services.ValidateAssembly();
+
 host.Run();

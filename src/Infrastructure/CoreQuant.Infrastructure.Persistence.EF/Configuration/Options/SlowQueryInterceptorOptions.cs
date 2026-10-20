@@ -21,4 +21,10 @@ internal sealed class SlowQueryInterceptorOptions
     /// Durations at or above this value log as Critical (default 1s).
     /// </summary>
     public TimeSpan CriticalThreshold { get; set; } = TimeSpan.FromSeconds(1);
+
+    /// <summary>
+    /// When true, the interceptor emits its own "ef command" span per command.
+    /// Keep false while the database driver (e.g. Npgsql) already traces commands, to avoid duplicate spans.
+    /// </summary>
+    public bool EmitCommandSpans { get; set; }
 }

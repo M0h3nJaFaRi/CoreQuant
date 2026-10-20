@@ -7,8 +7,9 @@ data:
   # =========================
   # Host
   # =========================
+  ApplicationName: "CoreQuant"
+  ApplicationComponent: "Scheduler"
   DOTNET_ENVIRONMENT: "Development"
-  ApplicationName: "CoreQuant.Scheduler"
 
   # =========================
   # Serilog

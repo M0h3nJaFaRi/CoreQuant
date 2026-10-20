@@ -3,19 +3,10 @@ namespace Common.Application.Exceptions;
 /// <summary>
 /// Thrown when FluentValidation rejects a command or query.
 /// </summary>
-public sealed class ValidationException : Exception
+public sealed class ValidationException(IReadOnlyCollection<ValidationFailure> failures) : Exception("One or more validation failures occurred.")
 {
-    /// <summary>
-    /// Creates a validation exception.
-    /// </summary>
-    public ValidationException(IReadOnlyCollection<ValidationFailure> failures)
-        : base("One or more validation failures occurred.")
-    {
-        Failures = failures;
-    }
-
     /// <summary>
     /// Validation failures.
     /// </summary>
-    public IReadOnlyCollection<ValidationFailure> Failures { get; }
+    public IReadOnlyCollection<ValidationFailure> Failures { get; } = failures;
 }
