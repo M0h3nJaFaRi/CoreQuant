@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Prometheus;
 using System.Reflection;
 
 namespace CoreQuant.Root;
@@ -116,26 +117,75 @@ public static class DependencyInjection
     public static WebApplication UseApiPipeline(this WebApplication app)
     {
         var identity = app.Services.GetRequiredService<ServiceIdentity>();
-
-        app.UsePathBase($"/{identity.Namespace.Trim('/')}");    // 1. Must be first so every later middleware sees the stripped path
-        app.UseMiddleware<CorrelationIdMiddleware>();           // 2. every later log/problem response gets the id
-        app.UseMiddleware<GlobalObservabilityMiddleware>();     // 3. outside ExceptionHandling: sees final status + exception
-        app.UseMiddleware<RequestLoggingMiddleware>();          // 4. outside ExceptionHandling: logs the final status
-        app.UseMiddleware<ExceptionHandlingMiddleware>();       // 5. catches everything below, including routing errors
-        app.UseRouting();                                       // 6. explicit, so routing runs INSIDE the exception handler
-        app.UseCors();                                          // 7. after routing; preflight answered before 503/401
-        app.UseMiddleware<MaintenanceModeMiddleware>();         // 8. cheap 503 before auth/timeouts/handlers
-        // app.UseRateLimiter();                                // 9. optional: throttle before ApiKey to slow brute force
-        app.UseRequestTimeouts();                               // 10. needs routing (endpoint metadata)
-        app.UseMiddleware<ApiKeyMiddleware>();                  // 11. API key gate
-        app.UseAuthentication();                                // 12. after routing, before authorization
-        app.UseAuthorization();                                 // 13. reads endpoint metadata ([Authorize]/[AllowAnonymous])
+          
+            // 1. Must be first so every later middleware sees the stripped path
+        app.UsePathBase($"/{identity.Namespace.ToLowerInvariant().Trim('/')}/{identity.Component.ToLowerInvariant().Trim('/')}")
+           
+           // 2. every later log/problem response gets the id
+           .UseMiddleware<CorrelationIdMiddleware>()
+           
+           // 3. outside ExceptionHandling: sees final status + exception
+           .UseMiddleware<GlobalObservabilityMiddleware>()
+           
+           // 4. outside ExceptionHandling: logs the final status
+           .UseMiddleware<RequestLoggingMiddleware>()
+           
+           // 5. catches everything below, including routing errors
+           .UseMiddleware<ExceptionHandlingMiddleware>()
+           
+           // 6. explicit, so routing runs INSIDE the exception handler
+           .UseRouting()
+           
+           // 7. after routing; preflight answered before 503/401
+           .UseCors()
+           
+           // 8. cheap 503 before auth/timeouts/handlers
+           .UseMiddleware<MaintenanceModeMiddleware>()
+           
+           // 9. optional: throttle before ApiKey to slow brute force
+           // .UseRateLimiter();
+           
+           // 10. needs routing (endpoint metadata)
+           .UseRequestTimeouts()
+           
+           // 11. API key gate
+           .UseMiddleware<ApiKeyMiddleware>()
+           
+           // 12. after routing, before authorization
+           .UseAuthentication()
+           
+           // 13. reads endpoint metadata ([Authorize]/[AllowAnonymous])
+           .UseAuthorization();
 
         return app;
     }
+    public static WebApplication UseApiPipeline2(this WebApplication app)
+    {
+        var identity = app.Services.GetRequiredService<ServiceIdentity>();
 
+        app.UsePathBase($"/{identity.Namespace.ToLowerInvariant().Trim('/')}/{identity.Component.ToLowerInvariant().Trim('/')}");
+
+        app.UseMiddleware<CorrelationIdMiddleware>();
+        app.UseMiddleware<GlobalObservabilityMiddleware>();
+        app.UseMiddleware<RequestLoggingMiddleware>();
+        app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+        app.UseRouting();
+        app.UseCors();
+
+        app.UseMiddleware<MaintenanceModeMiddleware>();
+
+        app.UseRequestTimeouts();
+        app.UseMiddleware<ApiKeyMiddleware>();
+
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        return app;
+    }
     public static WebApplication MapApiEndpoints(this WebApplication app)
     {
+        app.MapMetrics();
         app.MapControllers();
         app.MapServiceHealth();
 
