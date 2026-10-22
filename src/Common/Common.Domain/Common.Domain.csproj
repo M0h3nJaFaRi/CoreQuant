@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="10.1.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Abstractions" Version="2.3.13" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.ApiExplorer" Version="2.3.13" />
   </ItemGroup>
