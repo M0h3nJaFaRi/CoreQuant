@@ -4,11 +4,11 @@ public class ApiResponse
 {
     public bool Success { get; init; }
 
-    public ApiError? Error { get; init; }
+    public ApiProblemDetails? Error { get; init; }
 
     public static ApiResponse Ok() => new() { Success = true };
 
-    public static ApiResponse Fail(ApiError error) => new() { Success = false, Error = error };
+    public static ApiResponse Fail(ApiProblemDetails problemDetails) => new() { Success = false, Error = problemDetails };
 }
 
 public sealed class ApiResponse<T> : ApiResponse

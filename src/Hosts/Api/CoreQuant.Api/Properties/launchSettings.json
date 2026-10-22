@@ -5,8 +5,8 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "AllowedHosts": "*",
-        "ApplicationName": "CoreQuant",
-        "ApplicationComponent": "Api",
+        "Name": "CoreQuant",
+        "Component": "Api",
         "Framework__Encryption__AES__IV": "",
         "Framework__Encryption__AES__Key": "",
         "Framework__Encryption__RSA__PrivateKey": "",
@@ -106,8 +106,8 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Staging",
         "AllowedHosts": "*",
-        "ApplicationName": "CoreQuant",
-        "ApplicationComponent": "Api",
+        "Name": "CoreQuant",
+        "Component": "Api",
         "Framework__Encryption__AES__IV": "",
         "Framework__Encryption__AES__Key": "",
         "Framework__Encryption__RSA__PrivateKey": "",

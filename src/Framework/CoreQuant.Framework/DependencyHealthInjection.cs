@@ -16,7 +16,7 @@ public static class DependencyHealthInjection
 
         DependencyHealthCheck? shared = null;
 
-        string[] tags = options.Critical ? [HealthTags.Ready, HealthTags.Startup, kindTag] : [HealthTags.Ready, kindTag];
+        string[] tags = options.Critical ? [HealthTags.Ready, HealthTags.Startup, HealthTags.Detail, kindTag] : [HealthTags.Ready, HealthTags.Detail, kindTag];
 
         return builder.Add(new HealthCheckRegistration(name, sp => LazyInitializer.EnsureInitialized(ref shared, () => factory(sp)),
                            failureStatus: options.Critical ? HealthStatus.Unhealthy : HealthStatus.Degraded, tags: tags,

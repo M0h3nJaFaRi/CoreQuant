@@ -50,7 +50,9 @@ public static class DependencyInjection
             var identity = sp.GetRequiredService<ServiceIdentity>();
             return new ServiceHealthInfo(identity.Component);
         });
-        return services.AddHealthChecks();
+
+        return services.AddHealthChecks()
+                       .AddCheck("self", () => HealthCheckResult.Healthy(), tags: [HealthTags.Live]);
     }
 
     private static IServiceCollection RegisterInfrastructure(this IServiceCollection services, IConfiguration configuration)
@@ -90,8 +92,6 @@ public static class DependencyInjection
 
             return new Meter(name: serviceIdentity.Name, version: serviceIdentity.Version, tags: [.. tag]);
         });
-
-        services.AddHealthChecks().AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"]);
 
         return services;
     }

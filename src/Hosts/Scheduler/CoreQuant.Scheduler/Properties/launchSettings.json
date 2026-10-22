@@ -6,8 +6,8 @@
       "dotnetRunMessages": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "ApplicationName": "CoreQuant",
-        "ApplicationComponent": "Scheduler",
+        "Name": "CoreQuant",
+        "Component": "Scheduler",
         "DOTNET_ENVIRONMENT": "Development",
         "Framework__Encryption__AES__IV": "",
         "Framework__Encryption__AES__Key": "",
@@ -104,8 +104,8 @@
       "dotnetRunMessages": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Staging",
-        "ApplicationName": "CoreQuant",
-        "ApplicationComponent": "Scheduler",
+        "Name": "CoreQuant",
+        "Component": "Scheduler",
         "DOTNET_ENVIRONMENT": "Staging",
         "Framework__Encryption__AES__IV": "",
         "Framework__Encryption__AES__Key": "",

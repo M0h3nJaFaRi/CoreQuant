@@ -1,6 +1,6 @@
-using Common.Presentation.Api.Response;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using Common.Presentation.Api.Response;
 
 namespace Common.Presentation.Api.VersionController;
 
@@ -54,12 +54,6 @@ public abstract class MainController : ControllerBase
     /// </summary>
     protected IActionResult NoContentResponse() 
                          => NoContent();
-
-    /// <summary>
-    /// 404 Not Found with the failure envelope.
-    /// </summary>
-    protected IActionResult NotFoundResponse(string code = "not_found", string message = "Resource was not found.")
-                         => NotFound(ApiResponse.Fail(new ApiError(code, message)));
 
     protected IActionResult Page<T>(int page, int pageSize) 
                          => OkResponse(new PagedResponse<T>([], 0, page, pageSize));
