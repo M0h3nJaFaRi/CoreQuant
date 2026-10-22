@@ -77,7 +77,9 @@
     <File Path="solutionItem/deployment/k8s/stage/worker/secrets.yaml" />
     <File Path="solutionItem/deployment/packages/stage/worker/nuget.config" />
   </Folder>
-  <Folder Name="/solutionitem/docs/" />
+  <Folder Name="/solutionitem/docs/">
+    <File Path="README.md" />
+  </Folder>
   <Folder Name="/solutionitem/docs/api/">
     <File Path="solutionItem/docs/api/README.md" />
   </Folder>
