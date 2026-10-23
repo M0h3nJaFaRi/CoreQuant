@@ -3,7 +3,7 @@ using Common.Presentation.Api.Configuration.Options;
 using Common.Presentation.Contract;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Common.Presentation.Api.Swagger;
