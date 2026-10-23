@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [development, staging, production]
+  push:
+    branches: [development]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore CoreQuant.slnx
+
+      - name: Build
+        run: dotnet build CoreQuant.slnx --no-restore -c Release
+
+      - name: Unit tests
+        run: |
+          set -e
+          for p in tests/UnitTests/*/*.csproj; do
+            echo "::group::$p"
+            dotnet test "$p" --no-build -c Release --verbosity normal
+            echo "::endgroup::"
+          done
