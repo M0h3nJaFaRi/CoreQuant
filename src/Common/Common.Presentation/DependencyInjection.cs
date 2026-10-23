@@ -17,7 +17,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using System.Reflection;
 
@@ -132,21 +132,15 @@ public static class DependencyInjection
                 });
 
             if (swaggerOptions.IncludeDevUserHeader)
-                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
                 {
-                    {
-                        new OpenApiSecurityScheme { Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = DevUserSecurityId } },
-                        Array.Empty<string>()
-                    },
+                    [new OpenApiSecuritySchemeReference(DevUserSecurityId, document)] = []
                 });
 
             if (swaggerOptions.IncludeIngestionApiKey)
-                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
                 {
-                    {
-                        new OpenApiSecurityScheme { Reference = new OpenApiReference{ Type = ReferenceType.SecurityScheme, Id = IngestionApiKeySecurityId } },
-                        Array.Empty<string>()
-                    },
+                    [new OpenApiSecuritySchemeReference(IngestionApiKeySecurityId, document)] = []
                 });
 
             if (xmlAssembly is not null)
