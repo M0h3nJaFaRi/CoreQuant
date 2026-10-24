@@ -1,0 +1,140 @@
+name: Release
+
+# Manual workflow: creates a SemVer tag + GitHub Release from the HEAD of
+#   production -> stable release        (vX.Y.Z)
+#   staging    -> release candidate     (vX.Y.Z-rc.N)
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to release (production = stable, staging = release candidate)"
+        type: choice
+        options:
+          - production
+          - staging
+        default: production
+      bump:
+        description: "Version bump relative to the latest stable tag"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      ACTOR: ${{ github.actor }}
+      BRANCH: ${{ inputs.branch }}
+      BUMP: ${{ inputs.bump }}
+    steps:
+      - name: Only repository admins may release
+        run: |
+          perm=$(gh api "repos/$REPO/collaborators/$ACTOR/permission" --jq .permission)
+          echo "Permission of $ACTOR: $perm"
+          if [ "$perm" != "admin" ]; then
+            echo "::error::Only repository admins can run this workflow."
+            exit 1
+          fi
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+
+      - name: Compute next version
+        id: version
+        run: |
+          git fetch --tags --force
+
+          latest=$(git tag --list 'v[0-9]*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n1 || true)
+          start_tag="$latest"
+          if [ -z "$latest" ]; then
+            latest="v0.0.0"
+          fi
+
+          IFS=. read -r major minor patch <<< "${latest#v}"
+          case "$BUMP" in
+            major) major=$((major + 1)); minor=0; patch=0 ;;
+            minor) minor=$((minor + 1)); patch=0 ;;
+            patch) patch=$((patch + 1)) ;;
+            *) echo "::error::Unknown bump: $BUMP"; exit 1 ;;
+          esac
+          next="$major.$minor.$patch"
+
+          prerelease=false
+          if [ "$BRANCH" = "staging" ]; then
+            last_rc=$(git tag --list "v${next}-rc.*" | sed 's/.*-rc\.//' | sort -n | tail -n1 || true)
+            rc=$(( ${last_rc:-0} + 1 ))
+            tag="v${next}-rc.${rc}"
+            prerelease=true
+          else
+            tag="v${next}"
+          fi
+
+          if ! [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            echo "::error::Invalid tag format: $tag"
+            exit 1
+          fi
+          if git rev-parse -q --verify "refs/tags/$tag" > /dev/null; then
+            echo "::error::Tag $tag already exists."
+            exit 1
+          fi
+
+          echo "Latest stable: ${start_tag:-none}"
+          echo "New tag: $tag (from $BRANCH @ $(git rev-parse --short HEAD))"
+
+          {
+            echo "tag=$tag"
+            echo "start_tag=$start_tag"
+            echo "prerelease=$prerelease"
+            echo "sha=$(git rev-parse HEAD)"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore CoreQuant.slnx
+
+      - name: Build
+        run: dotnet build CoreQuant.slnx --no-restore -c Release
+
+      - name: Unit tests
+        run: |
+          for p in tests/UnitTests/*/*.csproj; do
+            echo "::group::$p"
+            dotnet test "$p" --no-build -c Release --verbosity normal
+            echo "::endgroup::"
+          done
+
+      - name: Create tag and GitHub Release
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          START_TAG: ${{ steps.version.outputs.start_tag }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
+          SHA: ${{ steps.version.outputs.sha }}
+        run: |
+          args=(--target "$SHA" --title "$TAG" --generate-notes)
+          if [ -n "$START_TAG" ]; then
+            args+=(--notes-start-tag "$START_TAG")
+          fi
+          if [ "$PRERELEASE" = "true" ]; then
+            args+=(--prerelease)
+          fi
+          gh release create "$TAG" "${args[@]}"
+          echo "Released $TAG" >> "$GITHUB_STEP_SUMMARY"
