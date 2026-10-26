@@ -80,16 +80,34 @@
   <Folder Name="/solutionitem/docs/">
     <File Path="README.md" />
   </Folder>
-  <Folder Name="/solutionitem/docs/api/">
+  <Folder Name="/solutionitem/docs/feature/" />
+  <Folder Name="/solutionitem/docs/feature/metal/" />
+  <Folder Name="/solutionitem/docs/feature/metal/v1/">
+    <File Path="solutionItem/docs/feature/metal/v1/README.md" />
+  </Folder>
+  <Folder Name="/solutionitem/docs/feature/metal/v1/scope/">
+    <File Path="solutionItem/docs/feature/metal/v1/scope/scope-01-milestone-and-goals.md" />
+    <File Path="solutionItem/docs/feature/metal/v1/scope/scope-02-symbols-v1.md" />
+    <File Path="solutionItem/docs/feature/metal/v1/scope/scope-03-quote-data-model.md" />
+    <File Path="solutionItem/docs/feature/metal/v1/scope/scope-04-ingest-vendor-and-sla.md" />
+    <File Path="solutionItem/docs/feature/metal/v1/scope/scope-05-ingest-runtime-topology.md" />
+    <File Path="solutionItem/docs/feature/metal/v1/scope/scope-06-api-v1-contract.md" />
+    <File Path="solutionItem/docs/feature/metal/v1/scope/scope-07-persistence-and-databases.md" />
+    <File Path="solutionItem/docs/feature/metal/v1/scope/scope-08-hosts-and-deployment-v1.md" />
+    <File Path="solutionItem/docs/feature/metal/v1/scope/scope-09-out-of-scope.md" />
+    <File Path="solutionItem/docs/feature/metal/v1/scope/scope-10-decisions-and-sign-off.md" />
+  </Folder>
+  <Folder Name="/solutionitem/docs/presentation/" />
+  <Folder Name="/solutionitem/docs/presentation/api/">
     <File Path="solutionItem/docs/api/README.md" />
   </Folder>
-  <Folder Name="/solutionitem/docs/consumer/">
+  <Folder Name="/solutionitem/docs/presentation/consumer/">
     <File Path="solutionItem/docs/consumer/README.md" />
   </Folder>
-  <Folder Name="/solutionitem/docs/scheduler/">
+  <Folder Name="/solutionitem/docs/presentation/scheduler/">
     <File Path="solutionItem/docs/scheduler/README.md" />
   </Folder>
-  <Folder Name="/solutionitem/docs/worker/">
+  <Folder Name="/solutionitem/docs/presentation/worker/">
     <File Path="solutionItem/docs/worker/README.md" />
   </Folder>
   <Folder Name="/solutionitem/monitoring/" />

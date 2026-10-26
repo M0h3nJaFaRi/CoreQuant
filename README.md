@@ -268,11 +268,13 @@ Still thin:
 
 Add market capabilities on this contract. Do not bypass the layers.
 
+Metal **v1.0.0** scope (micro-scopes): [solutionItem/docs/feature/metal/v1/README.md](solutionItem/docs/feature/metal/v1/README.md).
+
 ---
 
 ## Host docs
 
-- [API](solutionItem/docs/api/README.md)
-- [Worker](solutionItem/docs/worker/README.md)
-- [Consumer](solutionItem/docs/consumer/README.md)
-- [Scheduler](solutionItem/docs/scheduler/README.md)
+- [API](solutionItem/docs/presentation/api/README.md)
+- [Worker](solutionItem/docs/presentation/worker/README.md)
+- [Consumer](solutionItem/docs/presentation/consumer/README.md)
+- [Scheduler](solutionItem/docs/presentation/scheduler/README.md)
