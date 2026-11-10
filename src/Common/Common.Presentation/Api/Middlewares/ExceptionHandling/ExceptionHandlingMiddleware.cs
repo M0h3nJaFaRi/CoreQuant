@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.WebUtilities;
 using Common.Presentation.Api.Extensions;
 
 namespace Common.Presentation.Api.Middlewares.ExceptionHandling;
+
 public sealed class ExceptionHandlingMiddleware(IHostEnvironment environment, ILogger<ExceptionHandlingMiddleware> logger) : IMiddleware
 {
     public async Task InvokeAsync(HttpContext context, RequestDelegate next)
@@ -20,7 +21,6 @@ public sealed class ExceptionHandlingMiddleware(IHostEnvironment environment, IL
         }
         catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
         {
-            // Client disconnected: not a server error, nothing to write.
             context.Response.StatusCode = 499;
         }
         catch (Exception ex)
@@ -34,7 +34,6 @@ public sealed class ExceptionHandlingMiddleware(IHostEnvironment environment, IL
         var traceId = Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier;
         var path = context.Request.Path.Value ?? "/";
 
-        // Lets outer middlewares (observability / request logging) see the exception that produced the status.
         context.Features.Set<IExceptionHandlerFeature>(new ExceptionHandlerFeature { Error = ex, Path = path });
 
         if (context.Response.HasStarted)
@@ -50,23 +49,26 @@ public sealed class ExceptionHandlingMiddleware(IHostEnvironment environment, IL
         {
             logger.LogInformation(
                 "Handled {ErrorType} ({Status}) on {Method} {Path}. TraceId: {TraceId}",
-                ex is DomainException d ? d.Code : ex.GetType().Name,
+                ExceptionErrorMapper.GetErrorType(ex),
                 problem.Status, context.Request.Method, path, traceId);
         }
         else
         {
-            var status = ex is DomainException domain
-                ? DomainErrorMapper.GetStatusCode(domain)   // 5xx domain errors (unexpected, not_implemented, ...)
-                : StatusCodes.Status500InternalServerError;
+            var status = ExceptionErrorMapper.GetStatusCode(ex);
 
             problem = new ApiProblemDetails
             {
-                Type = "urn:error:internal",
+                Type = status >= StatusCodes.Status500InternalServerError ? "urn:error:internal" : $"urn:error:{status}",
                 Title = ReasonPhrases.GetReasonPhrase(status),
                 Status = status,
                 Detail = environment.IsDevelopment() ? ex.ToString() : "An unexpected error occurred.",
                 Instance = path
             };
+
+            if (ex is DomainException or Common.Framework.Exceptions.IHasErrorCode)
+            {
+                problem.Extensions["code"] = ExceptionErrorMapper.GetErrorType(ex);
+            }
 
             logger.LogError(ex, "Unhandled exception on {Method} {Path}. TraceId: {TraceId}",
                 context.Request.Method, path, traceId);
@@ -74,13 +76,14 @@ public sealed class ExceptionHandlingMiddleware(IHostEnvironment environment, IL
 
         await context.WriteProblemAsync(problem);
     }
+
     private static ApiProblemDetails? MapExpected(Exception ex, string path) => ex switch
     {
         BadHttpRequestException b => Simple(b.StatusCode, "The request is malformed.", path),
         JsonException => Simple(StatusCodes.Status400BadRequest, "The request body is not valid JSON.", path),
-        DomainException d when DomainErrorMapper.GetStatusCode(d) < StatusCodes.Status500InternalServerError => DomainErrorMapper.ToProblemDetails(d, path),
-        _ => null
+        _ => ExceptionErrorMapper.TryMap(ex, path)
     };
+
     private static ApiProblemDetails Simple(int status, string detail, string path) => new()
     {
         Type = $"urn:http-error:{status}",

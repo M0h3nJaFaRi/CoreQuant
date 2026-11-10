@@ -5,6 +5,7 @@ using Common.Application.Cqrs.Abstractions.Queries;
 using Common.Application.Cqrs.Pipeline;
 using Common.Application.Cqrs.Pipeline.Context;
 using Common.Application.Exceptions;
+using Common.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
@@ -54,6 +55,10 @@ internal sealed class MetricsBehavior<TRequest, TResponse>(CqrsMetrics metrics,
     {
         switch (ex)
         {
+            case DomainException domain:
+                metrics.RecordFailure(requestType, kind, "domain", started, reason: domain.Code);
+                break;
+
             case ForbiddenException forbidden:
                 metrics.RecordFailure(requestType, kind, "forbidden", started, reason: forbidden.Reason);
                 break;

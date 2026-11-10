@@ -3,7 +3,8 @@ namespace Common.Application.Exceptions;
 /// <summary>
 /// Thrown when a CQRS request exceeds its configured rate limit.
 /// </summary>
-public sealed class RateLimitExceededException(string message, TimeSpan? retryAfter = null) : Exception(message)
+public sealed class RateLimitExceededException(string message, TimeSpan? retryAfter = null)
+    : BusinessException(BusinessErrorCode.LimitExceeded, message)
 {
     /// <summary>
     /// Suggested wait time before retrying, when available.

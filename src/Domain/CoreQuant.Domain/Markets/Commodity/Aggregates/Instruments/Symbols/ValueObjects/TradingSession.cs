@@ -11,7 +11,7 @@ public sealed class TradingSession : ValueObject
     public TradingSession(TimeOnly from, TimeOnly to)
     {
         if (from == to)
-            throw DomainException.Guard("Session start and end times cannot be equal.", "range_equal");
+            throw new DomainRuleException("Session start and end times cannot be equal.", "RANGE_EQUAL");
 
         From = from;
         To = to;
