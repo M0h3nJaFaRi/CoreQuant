@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using System.Diagnostics;
-using Common.Domain.Exceptions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
@@ -8,6 +7,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Common.Presentation.Api.Response;
 using Microsoft.AspNetCore.WebUtilities;
 using Common.Presentation.Api.Extensions;
+using Common.Domain.Exceptions.Abstraction;
 
 namespace Common.Presentation.Api.Middlewares.ExceptionHandling;
 

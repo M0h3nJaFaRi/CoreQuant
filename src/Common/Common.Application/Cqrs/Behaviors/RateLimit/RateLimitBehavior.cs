@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Options;
-using Common.Application.Exceptions;
+using Common.Application.Exceptions.Adapters;
 using Common.Application.RateLimiting;
 using Common.Application.Cqrs.Pipeline;
 using Common.Application.Cqrs.Abstractions;

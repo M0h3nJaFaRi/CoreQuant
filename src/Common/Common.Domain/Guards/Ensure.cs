@@ -1,4 +1,4 @@
-using Common.Domain.Exceptions;
+using Common.Domain.Exceptions.Adapters;
 
 namespace Common.Domain.Guards;
 
@@ -19,7 +19,7 @@ public static class Ensure
     /// <summary>
     /// Throws <see cref="DomainRuleException"/> when <paramref name="value"/> is null.
     /// </summary>
-    public static T NotNull<T>(T? value, string message, string code = "NOT_NULL")
+    public static T NotNull<T>(T? value, string message, string code = "NotNull")
         where T : class
     {
         if (value is null)
@@ -31,7 +31,7 @@ public static class Ensure
     /// <summary>
     /// Throws <see cref="DomainRuleException"/> when <paramref name="value"/> is null or whitespace.
     /// </summary>
-    public static string NotEmpty(string? value, string message, string code = "NOT_EMPTY")
+    public static string NotEmpty(string? value, string message, string code = "NotEmpty")
     {
         if (string.IsNullOrWhiteSpace(value))
             throw new DomainRuleException(message, code);

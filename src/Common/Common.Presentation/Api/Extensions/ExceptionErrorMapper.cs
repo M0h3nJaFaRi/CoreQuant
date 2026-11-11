@@ -1,9 +1,10 @@
 using System.Collections.Frozen;
 using System.Net;
 using System.Reflection;
-using Common.Domain.Exceptions;
+using System.Text.RegularExpressions;
+using Common.Domain.Exceptions.Abstraction;
 using Common.Framework.Exceptions;
-using Common.Infrastructure.Exceptions;
+using Common.Infrastructure.Exceptions.Abstraction;
 using Common.Presentation.Api.Response;
 using Microsoft.AspNetCore.Http;
 
@@ -46,8 +47,13 @@ public static class ExceptionErrorMapper
 
     public static string Humanize(string code)
     {
-        var words = code.Split('_', StringSplitOptions.RemoveEmptyEntries);
-        return string.Join(' ', words.Select(w => char.ToUpperInvariant(w[0]) + w[1..].ToLowerInvariant()));
+        if (code.Contains('_', StringComparison.Ordinal))
+        {
+            var words = code.Split('_', StringSplitOptions.RemoveEmptyEntries);
+            return string.Join(' ', words.Select(w => char.ToUpperInvariant(w[0]) + w[1..].ToLowerInvariant()));
+        }
+
+        return string.Join(' ', Regex.Split(code, "(?<!^)(?=[A-Z])").Where(p => p.Length > 0));
     }
 
     private static bool IsApplicationException(Exception exception) =>
@@ -146,47 +152,47 @@ public static class ExceptionErrorMapper
 
     private static readonly FrozenDictionary<string, HttpStatusCode> DomainStatusMap = new Dictionary<string, HttpStatusCode>
     {
-        [DomainErrorCode.NotFound] = HttpStatusCode.NotFound,
-        [DomainErrorCode.AlreadyExists] = HttpStatusCode.Conflict,
-        [DomainErrorCode.Duplicate] = HttpStatusCode.Conflict,
-        [DomainErrorCode.InvalidState] = HttpStatusCode.UnprocessableEntity,
-        [DomainErrorCode.InvalidStateTransition] = HttpStatusCode.UnprocessableEntity,
-        [DomainErrorCode.AlreadyProcessed] = HttpStatusCode.Conflict,
-        [DomainErrorCode.Expired] = HttpStatusCode.UnprocessableEntity,
-        [DomainErrorCode.InvariantViolation] = HttpStatusCode.UnprocessableEntity,
-        [DomainErrorCode.ReferenceNotFound] = HttpStatusCode.UnprocessableEntity,
-        [DomainErrorCode.IntegrityViolation] = HttpStatusCode.Conflict,
-        [DomainErrorCode.ConcurrencyConflict] = HttpStatusCode.Conflict,
-        [DomainErrorCode.StaleVersion] = HttpStatusCode.Conflict
+        ["NotFound"] = HttpStatusCode.NotFound,
+        ["AlreadyExists"] = HttpStatusCode.Conflict,
+        ["Duplicate"] = HttpStatusCode.Conflict,
+        ["InvalidState"] = HttpStatusCode.UnprocessableEntity,
+        ["InvalidStateTransition"] = HttpStatusCode.UnprocessableEntity,
+        ["AlreadyProcessed"] = HttpStatusCode.Conflict,
+        ["Expired"] = HttpStatusCode.UnprocessableEntity,
+        ["InvariantViolation"] = HttpStatusCode.UnprocessableEntity,
+        ["ReferenceNotFound"] = HttpStatusCode.UnprocessableEntity,
+        ["IntegrityViolation"] = HttpStatusCode.Conflict,
+        ["ConcurrencyConflict"] = HttpStatusCode.Conflict,
+        ["StaleVersion"] = HttpStatusCode.Conflict
     }.ToFrozenDictionary();
 
     private static readonly FrozenDictionary<string, HttpStatusCode> ApplicationStatusMap = new Dictionary<string, HttpStatusCode>
     {
-        ["VALIDATION_FAILED"] = HttpStatusCode.BadRequest,
-        ["OPERATION_NOT_ALLOWED"] = HttpStatusCode.Forbidden,
-        ["LIMIT_EXCEEDED"] = HttpStatusCode.TooManyRequests,
-        ["INSUFFICIENT_BALANCE"] = HttpStatusCode.UnprocessableEntity,
-        ["INSUFFICIENT_QUANTITY"] = HttpStatusCode.UnprocessableEntity,
-        ["BUSINESS_RULE_VIOLATION"] = HttpStatusCode.UnprocessableEntity
+        ["ValidationFailed"] = HttpStatusCode.BadRequest,
+        ["OperationNotAllowed"] = HttpStatusCode.Forbidden,
+        ["LimitExceeded"] = HttpStatusCode.TooManyRequests,
+        ["InsufficientBalance"] = HttpStatusCode.UnprocessableEntity,
+        ["InsufficientQuantity"] = HttpStatusCode.UnprocessableEntity,
+        ["BusinessRuleViolation"] = HttpStatusCode.UnprocessableEntity
     }.ToFrozenDictionary();
 
     private static readonly FrozenDictionary<string, HttpStatusCode> IntegrationStatusMap = new Dictionary<string, HttpStatusCode>
     {
-        [IntegrationErrorCode.ProviderRejected] = HttpStatusCode.BadGateway,
-        [IntegrationErrorCode.ProviderTimeout] = HttpStatusCode.GatewayTimeout,
-        [IntegrationErrorCode.ProviderUnavailable] = HttpStatusCode.BadGateway,
-        [IntegrationErrorCode.ProviderCommunicationFailure] = HttpStatusCode.BadGateway,
-        [IntegrationErrorCode.UnexpectedProviderResponse] = HttpStatusCode.BadGateway
+        ["ProviderRejected"] = HttpStatusCode.BadGateway,
+        ["ProviderTimeout"] = HttpStatusCode.GatewayTimeout,
+        ["ProviderUnavailable"] = HttpStatusCode.BadGateway,
+        ["ProviderCommunicationFailure"] = HttpStatusCode.BadGateway,
+        ["UnexpectedProviderResponse"] = HttpStatusCode.BadGateway
     }.ToFrozenDictionary();
 
     private static readonly FrozenDictionary<string, HttpStatusCode> InfrastructureStatusMap = new Dictionary<string, HttpStatusCode>
     {
-        [InfrastructureErrorCode.DatabaseFailure] = HttpStatusCode.ServiceUnavailable,
-        [InfrastructureErrorCode.DatabaseUnavailable] = HttpStatusCode.ServiceUnavailable,
-        [InfrastructureErrorCode.CacheFailure] = HttpStatusCode.ServiceUnavailable,
-        [InfrastructureErrorCode.CacheUnavailable] = HttpStatusCode.ServiceUnavailable,
-        [InfrastructureErrorCode.StorageFailure] = HttpStatusCode.ServiceUnavailable,
-        [InfrastructureErrorCode.MessageBrokerFailure] = HttpStatusCode.ServiceUnavailable,
-        [InfrastructureErrorCode.UnexpectedInfrastructureFailure] = HttpStatusCode.ServiceUnavailable
+        ["DatabaseFailure"] = HttpStatusCode.ServiceUnavailable,
+        ["DatabaseUnavailable"] = HttpStatusCode.ServiceUnavailable,
+        ["CacheFailure"] = HttpStatusCode.ServiceUnavailable,
+        ["CacheUnavailable"] = HttpStatusCode.ServiceUnavailable,
+        ["StorageFailure"] = HttpStatusCode.ServiceUnavailable,
+        ["MessageBrokerFailure"] = HttpStatusCode.ServiceUnavailable,
+        ["UnexpectedInfrastructureFailure"] = HttpStatusCode.ServiceUnavailable
     }.ToFrozenDictionary();
 }

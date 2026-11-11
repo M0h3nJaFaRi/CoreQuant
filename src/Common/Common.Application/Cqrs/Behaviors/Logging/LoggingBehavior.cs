@@ -1,8 +1,8 @@
 using Common.Application.Authorization.Abstraction;
 using Common.Application.Configuration.Options;
 using Common.Application.Cqrs.Pipeline;
-using Common.Application.Exceptions;
-using Common.Domain.Exceptions;
+using Common.Application.Exceptions.Adapters;
+using Common.Domain.Exceptions.Abstraction;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;

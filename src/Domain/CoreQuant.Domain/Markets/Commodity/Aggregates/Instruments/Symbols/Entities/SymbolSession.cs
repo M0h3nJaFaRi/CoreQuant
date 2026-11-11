@@ -1,5 +1,5 @@
 ﻿using Common.Domain.Core;
-using Common.Domain.Exceptions;
+using Common.Domain.Exceptions.Adapters;
 using Common.Domain.Guards;
 using CoreQuant.Domain.Markets.Commodity.Aggregates.Instruments.Symbols.Events;
 using CoreQuant.Domain.Markets.Commodity.Aggregates.Instruments.Symbols.ValueObjects;
@@ -35,8 +35,8 @@ public sealed class SymbolSession : Entity<Guid>
 
     public static SymbolSession Record(SymbolSessionType type, int dayOfWeek, int sessionIndex, TradingSession period, DateTimeOffset capturedAtUtc)
     {
-        Ensure.That(dayOfWeek is >= 1 and <= 7, "Day of week must be between 1 and 7.", DomainErrorCode.InvariantViolation);
-        Ensure.That(sessionIndex >= 0, "Session index cannot be negative.", DomainErrorCode.InvariantViolation);
+        Ensure.That(dayOfWeek is >= 1 and <= 7, "Day of week must be between 1 and 7.", "InvariantViolation");
+        Ensure.That(sessionIndex >= 0, "Session index cannot be negative.", "InvariantViolation");
 
         return new SymbolSession(Guid.NewGuid(), type, dayOfWeek, sessionIndex, period, capturedAtUtc);
     }
