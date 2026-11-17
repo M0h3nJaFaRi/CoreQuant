@@ -11,4 +11,4 @@ public sealed class ProviderTimeoutException(
     string message,
     string? providerStatusCode = null,
     Exception? innerException = null)
-    : IntegrationException(provider, IntegrationErrorCode.ProviderTimeout, message, providerStatusCode, innerException);
+    : IntegrationLayerException(provider, IntegrationErrorCode.ProviderTimeout, message, providerStatusCode, innerException);

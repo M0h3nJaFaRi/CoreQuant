@@ -11,4 +11,4 @@ public sealed class ProviderUnavailableException(
     string message,
     string? providerStatusCode = null,
     Exception? innerException = null)
-    : IntegrationException(provider, IntegrationErrorCode.ProviderUnavailable, message, providerStatusCode, innerException);
+    : IntegrationLayerException(provider, IntegrationErrorCode.ProviderUnavailable, message, providerStatusCode, innerException);

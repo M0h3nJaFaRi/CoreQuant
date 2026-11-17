@@ -7,4 +7,4 @@ namespace Common.Infrastructure.Exceptions.Adapters;
 /// Thrown when a cache operation fails unexpectedly.
 /// </summary>
 public sealed class CacheFailureException(string message, Exception? innerException = null)
-    : InfrastructureException(InfrastructureErrorCode.CacheFailure, message, innerException);
+    : InfrastructureLayerException(InfrastructureErrorCode.CacheFailure, message, innerException);

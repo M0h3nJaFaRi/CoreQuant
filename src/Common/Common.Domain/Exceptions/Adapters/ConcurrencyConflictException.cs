@@ -11,7 +11,7 @@ public sealed class ConcurrencyConflictException(
     object? key = null,
     string? aggregateName = null,
     Exception? innerException = null)
-    : DomainException(
+    : DomainLayerException(
         DomainErrorCode.ConcurrencyConflict,
         key is null
             ? $"{entityName} was modified by another process."

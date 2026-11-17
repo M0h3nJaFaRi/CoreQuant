@@ -11,4 +11,4 @@ public sealed class ProviderRejectedException(
     string message,
     string? providerStatusCode = null,
     Exception? innerException = null)
-    : IntegrationException(provider, IntegrationErrorCode.ProviderRejected, message, providerStatusCode, innerException);
+    : IntegrationLayerException(provider, IntegrationErrorCode.ProviderRejected, message, providerStatusCode, innerException);

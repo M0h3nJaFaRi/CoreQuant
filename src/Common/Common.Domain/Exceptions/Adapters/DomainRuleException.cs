@@ -11,4 +11,4 @@ public sealed class DomainRuleException(
     string? entityName = null,
     string? aggregateName = null,
     Exception? innerException = null)
-    : DomainException(code, message, entityName: entityName, aggregateName: aggregateName, innerException: innerException);
+    : DomainLayerException(code, message, entityName: entityName, aggregateName: aggregateName, innerException: innerException);

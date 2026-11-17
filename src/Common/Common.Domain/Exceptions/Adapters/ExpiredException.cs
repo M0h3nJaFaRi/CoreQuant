@@ -11,7 +11,7 @@ public sealed class ExpiredException(
     object? key = null,
     string? aggregateName = null,
     Exception? innerException = null)
-    : DomainException(
+    : DomainLayerException(
         DomainErrorCode.Expired,
         key is null ? $"{entityName} has expired." : $"{entityName} '{key}' has expired.",
         value: key,

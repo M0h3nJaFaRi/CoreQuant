@@ -67,7 +67,7 @@ internal sealed class LoggingBehavior<TRequest, TResponse>(ICurrentUserAccessor 
                                        requestType, traceId, spanId, elapsedMs);
                 break;
 
-            case DomainException or ForbiddenException or RateLimitExceededException or ValidationException:
+            case DomainLayerException or ForbiddenException or RateLimitExceededException or ValidationException:
                 logger.LogWarning(ex, "CQRS rejected {RequestType} TraceId={TraceId} SpanId={SpanId} DurationMs={DurationMs} Reason={ExceptionType}",
                                   requestType, traceId, spanId, elapsedMs, ex.GetType().Name);
                 break;

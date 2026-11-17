@@ -21,7 +21,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Common.Domain\Common.Domain.csproj" />
     <ProjectReference Include="..\Common.Framework\Common.Framework.csproj" />
-    <ProjectReference Include="..\Common.Presentation\Common.Presentation.csproj" />
   </ItemGroup>
 
   <ItemGroup>

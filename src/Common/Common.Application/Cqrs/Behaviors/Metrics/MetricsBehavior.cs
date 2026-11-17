@@ -55,8 +55,8 @@ internal sealed class MetricsBehavior<TRequest, TResponse>(CqrsMetrics metrics,
     {
         switch (ex)
         {
-            case DomainException domain:
-                metrics.RecordFailure(requestType, kind, "domain", started, reason: domain.Code);
+            case DomainLayerException domain:
+                metrics.RecordFailure(requestType, kind, "domain", started, reason: domain.ErrorCode);
                 break;
 
             case ForbiddenException forbidden:

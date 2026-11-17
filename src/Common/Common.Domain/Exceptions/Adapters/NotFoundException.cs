@@ -11,7 +11,7 @@ public sealed class NotFoundException(
     object? key = null,
     string? aggregateName = null,
     Exception? innerException = null)
-    : DomainException(
+    : DomainLayerException(
         DomainErrorCode.NotFound,
         key is null ? $"{entityName} was not found." : $"{entityName} '{key}' was not found.",
         value: key,

@@ -7,4 +7,4 @@ namespace Common.Infrastructure.Exceptions.Adapters;
 /// Thrown when the database is unavailable.
 /// </summary>
 public sealed class DatabaseUnavailableException(string message, Exception? innerException = null)
-    : InfrastructureException(InfrastructureErrorCode.DatabaseUnavailable, message, innerException);
+    : InfrastructureLayerException(InfrastructureErrorCode.DatabaseUnavailable, message, innerException);

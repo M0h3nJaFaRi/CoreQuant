@@ -11,7 +11,7 @@ public sealed class ReferenceNotFoundException(
     object? key = null,
     string? aggregateName = null,
     Exception? innerException = null)
-    : DomainException(
+    : DomainLayerException(
         DomainErrorCode.ReferenceNotFound,
         key is null ? $"Referenced {referenceName} was not found." : $"Referenced {referenceName} '{key}' was not found.",
         value: key,

@@ -7,4 +7,4 @@ namespace Common.Infrastructure.Exceptions.Adapters;
 /// Thrown for uncategorized infrastructure failures.
 /// </summary>
 public sealed class UnexpectedInfrastructureFailureException(string message, Exception? innerException = null)
-    : InfrastructureException(InfrastructureErrorCode.UnexpectedInfrastructureFailure, message, innerException);
+    : InfrastructureLayerException(InfrastructureErrorCode.UnexpectedInfrastructureFailure, message, innerException);

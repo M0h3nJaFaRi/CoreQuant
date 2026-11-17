@@ -13,7 +13,7 @@ public sealed class InvalidStateException(
     object? expected = null,
     string? aggregateName = null,
     Exception? innerException = null)
-    : DomainException(
+    : DomainLayerException(
         DomainErrorCode.InvalidState,
         message,
         value: current,

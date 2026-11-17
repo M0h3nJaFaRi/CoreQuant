@@ -11,7 +11,7 @@ public sealed class StaleVersionException(
     object? key = null,
     string? aggregateName = null,
     Exception? innerException = null)
-    : DomainException(
+    : DomainLayerException(
         DomainErrorCode.StaleVersion,
         key is null ? $"{entityName} version is stale." : $"{entityName} '{key}' version is stale.",
         value: key,

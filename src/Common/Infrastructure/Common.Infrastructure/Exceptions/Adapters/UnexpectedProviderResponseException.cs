@@ -11,4 +11,4 @@ public sealed class UnexpectedProviderResponseException(
     string message,
     string? providerStatusCode = null,
     Exception? innerException = null)
-    : IntegrationException(provider, IntegrationErrorCode.UnexpectedProviderResponse, message, providerStatusCode, innerException);
+    : IntegrationLayerException(provider, IntegrationErrorCode.UnexpectedProviderResponse, message, providerStatusCode, innerException);

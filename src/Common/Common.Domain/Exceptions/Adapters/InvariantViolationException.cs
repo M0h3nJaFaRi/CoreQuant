@@ -11,7 +11,7 @@ public sealed class InvariantViolationException(
     string? entityName = null,
     string? aggregateName = null,
     Exception? innerException = null)
-    : DomainException(
+    : DomainLayerException(
         DomainErrorCode.InvariantViolation,
         message,
         entityName: entityName,

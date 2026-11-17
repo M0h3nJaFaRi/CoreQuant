@@ -7,4 +7,4 @@ namespace Common.Infrastructure.Exceptions.Adapters;
 /// Thrown when object storage fails unexpectedly.
 /// </summary>
 public sealed class StorageFailureException(string message, Exception? innerException = null)
-    : InfrastructureException(InfrastructureErrorCode.StorageFailure, message, innerException);
+    : InfrastructureLayerException(InfrastructureErrorCode.StorageFailure, message, innerException);

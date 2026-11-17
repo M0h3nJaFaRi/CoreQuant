@@ -11,7 +11,7 @@ public sealed class DuplicateException(
     object? key = null,
     string? aggregateName = null,
     Exception? innerException = null)
-    : DomainException(
+    : DomainLayerException(
         DomainErrorCode.Duplicate,
         key is null ? $"Duplicate {entityName}." : $"Duplicate {entityName} '{key}'.",
         value: key,

@@ -7,4 +7,4 @@ namespace Common.Infrastructure.Exceptions.Adapters;
 /// Thrown when a database operation fails unexpectedly.
 /// </summary>
 public sealed class DatabaseFailureException(string message, Exception? innerException = null)
-    : InfrastructureException(InfrastructureErrorCode.DatabaseFailure, message, innerException);
+    : InfrastructureLayerException(InfrastructureErrorCode.DatabaseFailure, message, innerException);

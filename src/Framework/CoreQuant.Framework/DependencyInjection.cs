@@ -1,5 +1,5 @@
 ﻿using Common.Framework.HealthChecks;
-using Common.Presentation.Contract;
+using Common.Framework.Contract;
 using FluentValidation;
 using Framework.Infrastructure.Time;
 using Framework.Observability.Configuration.Options;

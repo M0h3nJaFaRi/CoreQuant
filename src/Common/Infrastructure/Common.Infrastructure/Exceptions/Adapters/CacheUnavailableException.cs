@@ -7,4 +7,4 @@ namespace Common.Infrastructure.Exceptions.Adapters;
 /// Thrown when the cache layer is unavailable.
 /// </summary>
 public sealed class CacheUnavailableException(string message, Exception? innerException = null)
-    : InfrastructureException(InfrastructureErrorCode.CacheUnavailable, message, innerException);
+    : InfrastructureLayerException(InfrastructureErrorCode.CacheUnavailable, message, innerException);

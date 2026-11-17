@@ -11,4 +11,4 @@ public sealed class ProviderCommunicationFailureException(
     string message,
     string? providerStatusCode = null,
     Exception? innerException = null)
-    : IntegrationException(provider, IntegrationErrorCode.ProviderCommunicationFailure, message, providerStatusCode, innerException);
+    : IntegrationLayerException(provider, IntegrationErrorCode.ProviderCommunicationFailure, message, providerStatusCode, innerException);

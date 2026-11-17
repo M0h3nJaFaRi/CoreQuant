@@ -11,7 +11,7 @@ public sealed class IntegrityViolationException(
     string? entityName = null,
     string? aggregateName = null,
     Exception? innerException = null)
-    : DomainException(
+    : DomainLayerException(
         DomainErrorCode.IntegrityViolation,
         message,
         entityName: entityName,

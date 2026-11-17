@@ -12,7 +12,7 @@ public sealed class InvalidStateTransitionException(
     object to,
     string? aggregateName = null,
     Exception? innerException = null)
-    : DomainException(
+    : DomainLayerException(
         DomainErrorCode.InvalidStateTransition,
         $"{entityName} cannot transition from '{from}' to '{to}'.",
         value: from,

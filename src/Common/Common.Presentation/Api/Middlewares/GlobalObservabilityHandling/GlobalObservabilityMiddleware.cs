@@ -1,5 +1,5 @@
 ﻿using Common.Domain.Exceptions.Abstraction;
-using Common.Framework.Exceptions;
+using Common.Framework.Exceptions.Abstraction;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -51,8 +51,8 @@ public sealed class GlobalObservabilityMiddleware(HttpMetrics metrics) : IMiddle
         {
             var (errorType, errorKind) = exception switch
             {
-                DomainException domain => (domain.Code, "domain"),
-                IHasErrorCode coded => (coded.Code, "expected"),
+                DomainLayerException domain => (domain.ErrorCode, "domain"),
+                ServiceException service => (service.ErrorCode, "expected"),
                 _ => (exception.GetType().Name, "unexpected")
             };
 

@@ -7,4 +7,4 @@ namespace Common.Infrastructure.Exceptions.Adapters;
 /// Thrown when a message broker operation fails.
 /// </summary>
 public sealed class MessageBrokerFailureException(string message, Exception? innerException = null)
-    : InfrastructureException(InfrastructureErrorCode.MessageBrokerFailure, message, innerException);
+    : InfrastructureLayerException(InfrastructureErrorCode.MessageBrokerFailure, message, innerException);

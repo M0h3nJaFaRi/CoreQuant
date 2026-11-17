@@ -1,6 +1,6 @@
 using Asp.Versioning.ApiExplorer;
 using Common.Presentation.Api.Configuration.Options;
-using Common.Presentation.Contract;
+using Common.Framework.Contract;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;

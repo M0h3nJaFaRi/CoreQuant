@@ -11,7 +11,7 @@ using Common.Presentation.Api.Middlewares.MaintenanceHandling;
 using Common.Presentation.Api.Middlewares.RequestLoggingHandling;
 using Common.Presentation.Api.Middlewares.TimeoutHandling;
 using Common.Presentation.Api.Swagger;
-using Common.Presentation.Contract;
+using Common.Framework.Contract;
 using Microsoft.AspNetCore.Http.Timeouts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -204,7 +204,7 @@ public static class DependencyInjection
     }
     private static IServiceCollection AddApiExceptionHandlingMiddleware(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddTransient<ExceptionHandlingMiddleware>();
+        services.AddTransient<GlobalExceptionHandlingMiddleware>();
         return services;
     }
     private static IServiceCollection AddApiMaintenanceModeMiddleware(this IServiceCollection services, IConfiguration configuration)
