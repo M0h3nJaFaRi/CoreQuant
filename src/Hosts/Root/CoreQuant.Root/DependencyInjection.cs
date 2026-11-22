@@ -7,7 +7,7 @@ using Common.Presentation.Api.Middlewares.ExceptionHandling;
 using Common.Presentation.Api.Middlewares.GlobalObservabilityHandling;
 using Common.Presentation.Api.Middlewares.MaintenanceHandling;
 using Common.Presentation.Api.Middlewares.RequestLoggingHandling;
-using Common.Presentation.Contract;
+using Common.Framework.Contract;
 using CoreQuant.Application;
 using CoreQuant.Domain;
 using CoreQuant.Infrastructure;
@@ -131,7 +131,7 @@ public static class DependencyInjection
            .UseMiddleware<RequestLoggingMiddleware>()
            
            // 5. catches everything below, including routing errors
-           .UseMiddleware<ExceptionHandlingMiddleware>()
+           .UseMiddleware<GlobalExceptionHandlingMiddleware>()
            
            // 6. explicit, so routing runs INSIDE the exception handler
            .UseRouting()
@@ -168,7 +168,7 @@ public static class DependencyInjection
         app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseMiddleware<GlobalObservabilityMiddleware>();
         app.UseMiddleware<RequestLoggingMiddleware>();
-        app.UseMiddleware<ExceptionHandlingMiddleware>();
+        app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
         app.UseRouting();
         app.UseCors();

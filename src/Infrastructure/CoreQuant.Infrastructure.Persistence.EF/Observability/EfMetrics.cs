@@ -1,4 +1,4 @@
-using Common.Presentation.Contract;
+using Common.Framework.Contract;
 using System.Buffers;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;

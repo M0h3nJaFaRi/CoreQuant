@@ -1,6 +1,6 @@
 using Common.Application.Authorization.Abstraction;
 using Common.Application.Cqrs.Pipeline;
-using Common.Application.Exceptions;
+using Common.Application.Exceptions.Adapters;
 
 namespace Common.Application.Cqrs.Behaviors.Authorization;
 

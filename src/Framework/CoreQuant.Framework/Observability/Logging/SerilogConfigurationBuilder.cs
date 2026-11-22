@@ -1,4 +1,4 @@
-using Common.Presentation.Contract;
+using Common.Framework.Contract;
 using Framework.Observability.Configuration.Options;
 using Serilog;
 using Serilog.Events;
