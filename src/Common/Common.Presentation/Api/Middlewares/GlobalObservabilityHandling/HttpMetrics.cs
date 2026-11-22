@@ -1,4 +1,4 @@
-﻿using Common.Presentation.Contract;
+﻿using Common.Framework.Contract;
 using System.Collections.Frozen;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;

@@ -1,0 +1,86 @@
+---
+description: CoreQuant Common exception building blocks — layer folders, ServiceException hierarchy, adapters only at boundaries, HTTP handling in Presentation.
+globs: src/Common/**/*
+alwaysApply: true
+---
+
+# Common Exception Building Blocks
+
+<!-- خلاصه فارسی: هر لایه فقط adapterهای عمومی خودش را throw می‌کند؛ کد خطا internal؛ ریشه ServiceException در Framework. -->
+
+Mandatory contract for `Common.Domain`, `Common.Application`, `Common.Infrastructure`, `Common.Framework`, and `Common.Presentation` exception code.
+
+## Hierarchy
+
+| Layer | Abstract base (in `Exceptions/Abstraction/`) | Root |
+| --- | --- | --- |
+| Shared | `ServiceException` | `Exception` (`Common.Framework/Exceptions/Abstraction/ServiceException.cs`) |
+| Domain | `DomainLayerException` | `ServiceException` |
+| Application | `ApplicationLayerException` | `ServiceException` |
+| Application business | `BusinessException` | `ApplicationLayerException` |
+| Application validation | `ApplicationValidationException` (or layer validation abstract) | `ApplicationLayerException` |
+| Infrastructure | `InfrastructureLayerException` | `ServiceException` |
+| Integration | `IntegrationLayerException` | `ServiceException` |
+
+`ServiceException` exposes `ErrorCode` on the instance. Do not reintroduce `IHasErrorCode` or parallel marker interfaces.
+
+## Folder layout (per assembly)
+
+Every exception family in a Common assembly MUST use:
+
+```text
+Exceptions/
+  Abstraction/     # abstract bases for that layer (public)
+  Adapters/        # one sealed public adapter per distinct error code/scenario
+  ErrorCode/       # internal static const strings (PascalCase values)
+```
+
+Rules:
+
+- **ErrorCode** types are `internal` — not public API outside the assembly.
+- External code throws/catches **`Adapters`** (sealed types) or the layer abstract base when appropriate; it must not depend on `ErrorCode` constants from another assembly.
+- **One adapter per standard error code** for catalogued failures; bounded-context-specific codes may use `DomainRuleException` or dedicated adapters in the owning project.
+- No flat `Exceptions/*.cs` dumps for bases, adapters, or codes.
+
+## Dependency direction
+
+- Domain and Application MUST NOT reference Presentation, HTTP, or ProblemDetails.
+- Infrastructure adapters wrap database/cache/broker/provider failures; Integration adapters wrap external provider errors at adapter boundaries.
+- HTTP status mapping and RFC 7807 responses live **only** in `Common.Presentation` (`GlobalExceptionHandlingMiddleware`, `ApiProblemFactory`, `ApiProblemMapper`).
+
+## What to throw (and what not)
+
+### MUST
+
+- Use layer adapters (e.g. `NotFoundException`, `InvariantViolationException`, `ValidationException`, `RateLimitExceededException`, `DatabaseFailureException`, `ProviderTimeoutException`).
+- Use `Ensure` and domain guards that throw `DomainRuleException` or catalogued domain adapters.
+- Wrap unexpected SDK/provider failures into Integration or Infrastructure adapters with `innerException` when wrapping adds context.
+
+### MUST NOT
+
+- `throw new Exception`, `ApplicationException` (BCL), or arbitrary `InvalidOperationException` for business/domain/application policy outcomes that belong in the catalog.
+- Throw Domain exceptions from Application or Infrastructure for convenience.
+- Throw Infrastructure/Integration exceptions for validation or business policy.
+- Leak stack traces or internal messages in Production API responses (middleware owns safe unhandled 500).
+
+## Presentation handling
+
+- Register `GlobalExceptionHandlingMiddleware` for API hosts.
+- Map `ServiceException` derivatives (domain, application, infrastructure, integration) to typed problems; treat non-service exceptions as unhandled (safe 500).
+- Separate logging severity for expected client errors vs server errors.
+
+## Cross-cutting shared types
+
+- `ServiceIdentity` lives in `Common.Framework/Contract` (not Presentation).
+
+## Agent workflow
+
+Before adding or changing exceptions:
+
+1. Identify the correct layer and assembly.
+2. Add or reuse an **internal** code in `ErrorCode/` if catalogued.
+3. Add or extend exactly one **adapter** in `Adapters/` for that code.
+4. Update `GlobalExceptionHandlingMiddleware` mapping only when a new family or HTTP semantics is required.
+5. Build `CoreQuant.slnx` after changes.
+
+Do not create a second global mapper type; keep HTTP mapping colocated with the middleware infrastructure in Presentation.

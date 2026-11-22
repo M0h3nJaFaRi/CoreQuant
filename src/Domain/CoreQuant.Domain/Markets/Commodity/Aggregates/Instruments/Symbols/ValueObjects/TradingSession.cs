@@ -1,5 +1,5 @@
 ﻿using Common.Domain.Core;
-using Common.Domain.Exceptions;
+using Common.Domain.Exceptions.Adapters;
 
 namespace CoreQuant.Domain.Markets.Commodity.Aggregates.Instruments.Symbols.ValueObjects;
 
@@ -11,7 +11,7 @@ public sealed class TradingSession : ValueObject
     public TradingSession(TimeOnly from, TimeOnly to)
     {
         if (from == to)
-            throw DomainException.Guard("Session start and end times cannot be equal.", "range_equal");
+            throw new DomainRuleException("Session start and end times cannot be equal.", "RangeEqual");
 
         From = from;
         To = to;

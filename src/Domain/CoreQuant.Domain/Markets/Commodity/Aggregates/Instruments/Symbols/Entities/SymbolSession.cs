@@ -1,5 +1,5 @@
 ﻿using Common.Domain.Core;
-using Common.Domain.Exceptions;
+using Common.Domain.Exceptions.Adapters;
 using Common.Domain.Guards;
 using CoreQuant.Domain.Markets.Commodity.Aggregates.Instruments.Symbols.Events;
 using CoreQuant.Domain.Markets.Commodity.Aggregates.Instruments.Symbols.ValueObjects;
@@ -17,14 +17,14 @@ public sealed class SymbolSession : Entity<Guid>
     public SymbolSession(Guid id, SymbolSessionType type, int dayOfWeek, int sessionIndex, TradingSession period, DateTimeOffset capturedAtUtc)
 
         : base(id == Guid.Empty
-            ? throw DomainException.InvalidValue(nameof(id))
+            ? throw new InvariantViolationException($"{nameof(id)} has an invalid value.")
             : id)
     {
         if (dayOfWeek is < 1 or > 7)
-            throw DomainException.OutOfRange(nameof(dayOfWeek), 1, 7);
+            throw new InvariantViolationException($"{nameof(dayOfWeek)} must be between 1 and 7.");
 
         if (sessionIndex < 0)
-            throw DomainException.MustBeZeroOrPositive(nameof(sessionIndex));
+            throw new InvariantViolationException($"{nameof(sessionIndex)} must be zero or positive.");
 
         Type = type;
         DayOfWeek = dayOfWeek;
@@ -35,8 +35,8 @@ public sealed class SymbolSession : Entity<Guid>
 
     public static SymbolSession Record(SymbolSessionType type, int dayOfWeek, int sessionIndex, TradingSession period, DateTimeOffset capturedAtUtc)
     {
-        Ensure.That(dayOfWeek is >= 1 and <= 7, "Day of week must be between 1 and 7.", DomainExceptionCode.OutOfRange);
-        Ensure.That(sessionIndex >= 0, "Session index cannot be negative.", DomainExceptionCode.MustBeZeroOrPositive);
+        Ensure.That(dayOfWeek is >= 1 and <= 7, "Day of week must be between 1 and 7.", "InvariantViolation");
+        Ensure.That(sessionIndex >= 0, "Session index cannot be negative.", "InvariantViolation");
 
         return new SymbolSession(Guid.NewGuid(), type, dayOfWeek, sessionIndex, period, capturedAtUtc);
     }

@@ -1,5 +1,6 @@
 using FluentValidation;
 using Common.Application.Exceptions;
+using Common.Application.Exceptions.Adapters;
 using Common.Application.Cqrs.Pipeline;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -31,7 +32,7 @@ internal sealed class ValidationBehavior<TRequest, TResponse>(IServiceProvider s
                                         .ToArray();
 
         if (failures.Length > 0)
-            throw new Exceptions.ValidationException(failures);
+            throw new Exceptions.Adapters.ValidationException(failures);
 
         return await next().ConfigureAwait(false);
     }

@@ -1,7 +1,8 @@
 using Common.Application.Authorization.Abstraction;
 using Common.Application.Configuration.Options;
 using Common.Application.Cqrs.Pipeline;
-using Common.Application.Exceptions;
+using Common.Application.Exceptions.Adapters;
+using Common.Domain.Exceptions.Abstraction;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Diagnostics;
@@ -66,7 +67,7 @@ internal sealed class LoggingBehavior<TRequest, TResponse>(ICurrentUserAccessor 
                                        requestType, traceId, spanId, elapsedMs);
                 break;
 
-            case ForbiddenException or RateLimitExceededException or ValidationException:
+            case DomainLayerException or ForbiddenException or RateLimitExceededException or ValidationException:
                 logger.LogWarning(ex, "CQRS rejected {RequestType} TraceId={TraceId} SpanId={SpanId} DurationMs={DurationMs} Reason={ExceptionType}",
                                   requestType, traceId, spanId, elapsedMs, ex.GetType().Name);
                 break;

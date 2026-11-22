@@ -1,10 +1,12 @@
-﻿using Common.Domain.Exceptions;
+﻿using Common.Domain.Exceptions.Abstraction;
+using Common.Framework.Exceptions.Abstraction;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using System.Diagnostics;
 
 namespace Common.Presentation.Api.Middlewares.GlobalObservabilityHandling;
+
 public sealed class GlobalObservabilityMiddleware(HttpMetrics metrics) : IMiddleware
 {
     private const string UnmatchedRoute = "unmatched";
@@ -47,15 +49,20 @@ public sealed class GlobalObservabilityMiddleware(HttpMetrics metrics) : IMiddle
 
         if (exception is not null && !clientAborted)
         {
-            var (errorType, errorKind) = exception is DomainException domain ? (domain.Code, "domain") : (exception.GetType().Name, "unexpected");
+            var (errorType, errorKind) = exception switch
+            {
+                DomainLayerException domain => (domain.ErrorCode, "domain"),
+                ServiceException service => (service.ErrorCode, "expected"),
+                _ => (exception.GetType().Name, "unexpected")
+            };
 
             metrics.RecordException(method, route, errorType, errorKind);
             activity?.AddException(exception);
         }
 
-        // Server-span semantics: only 5xx is an error; 4xx is the client's fault.
         if (statusCode >= StatusCodes.Status500InternalServerError)
             activity?.SetStatus(ActivityStatusCode.Error);
     }
+
     private static string GetRoute(HttpContext context) => (context.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText ?? UnmatchedRoute;
 }
